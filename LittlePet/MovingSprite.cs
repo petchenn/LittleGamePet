@@ -11,14 +11,25 @@ namespace LittlePet
     class MovingSprite : ScaledSprite
     {
         private float _speed;
-        public MovingSprite(Texture2D texture, Vector2 position, float speed) : base(texture, position)
+        public MovingSprite(Texture2D texture, Vector2 position, float speed = 64) : base(texture, position)
         {
             this._speed = speed;
         }
-        public override void Update()
+        public void MoveRight()
         {
-            base.Update();
             position.X += _speed;
+        }
+        public void MoveLeft()
+        {
+            position.X -= _speed;
+        }
+        public void MoveUp()
+        {
+            position.Y -= _speed;
+        }
+        public void MoveDown()
+        {
+            position.Y += _speed;
         }
     }
 }

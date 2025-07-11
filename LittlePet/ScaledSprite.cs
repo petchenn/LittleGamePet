@@ -14,7 +14,7 @@ namespace LittlePet
         {
             get
             {
-                return new Rectangle((int)position.X, (int)position.Y, 50, 100);
+                return new Rectangle((int)position.X, (int)position.Y, 64, 64);
             }
         }
 
