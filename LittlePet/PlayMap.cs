@@ -40,6 +40,8 @@ namespace LittlePet
             cells[1, 1] = new WallCell(new Vector2(1 * cellSize, 1 * cellSize), Walltexture);
             cells[2, 1] = new WallCell(new Vector2(2 * cellSize, 1 * cellSize), Walltexture);
             cells[3, 1] = new WallCell(new Vector2(3 * cellSize, 1 * cellSize), Walltexture);
+
+            cells[1, 4] = new EnemyCell(new Vector2(1 * cellSize, 4 * cellSize), Enemytexture);
         }
 
         public void Draw(SpriteBatch spriteBatch)
@@ -59,6 +61,35 @@ namespace LittlePet
         public int GetEnemyCount()
         {
             return 0;
+        }
+
+        // Получить позицию клетки в мировых координатах по координатам сетки
+        public Vector2 GetCellPosition(Vector2 gridPosition)
+        {
+            return new Vector2(gridPosition.X * cellSize, gridPosition.Y * cellSize);
+        }
+
+        // Получить клетку по координатам сетки
+        public Cell GetCell(Vector2 gridPosition)
+        {
+            if (gridPosition.X >= 0 && gridPosition.X < width && gridPosition.Y >= 0 && gridPosition.Y < height)
+            {
+                return cells[(int)gridPosition.X, (int)gridPosition.Y];
+            }
+            return null; // Возвращаем null, если координаты вне карты
+        }
+
+
+        // Проверка, является ли клетка проходимой (не стена и в пределах карты)
+        public bool IsCellWalkable(Vector2 gridPosition)
+        {
+            if (gridPosition.X < 0 || gridPosition.X >= width || gridPosition.Y < 0 || gridPosition.Y >= height)
+            {
+                return false; // Клетка за пределами карты
+            }
+
+            Cell cell = GetCell(gridPosition);
+            return !(cell is WallCell); // Клетка не является стеной
         }
     }
 }

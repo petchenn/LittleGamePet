@@ -16,6 +16,8 @@ public abstract class Cell
 
     public abstract void Update(GameTime gameTime);
     public abstract void Draw(SpriteBatch spriteBatch);
+    public abstract void Collision();
+
 }
 
 public class FloorCell : Cell
@@ -32,6 +34,11 @@ public class FloorCell : Cell
     public override void Draw(SpriteBatch spriteBatch)
     {
         spriteBatch.Draw(Texture, Position, Color);
+    }
+
+    public override void Collision()
+    {
+        //целое ничего
     }
 }
 
@@ -50,6 +57,11 @@ public class WallCell : Cell
     public override void Draw(SpriteBatch spriteBatch)
     {
         spriteBatch.Draw(Texture, Position, Color);
+    }
+
+    public override void Collision()
+    {
+        //откидывание назад
     }
 }
 
@@ -71,5 +83,9 @@ public class EnemyCell : Cell
     public override void Draw(SpriteBatch spriteBatch)
     {
         spriteBatch.Draw(Texture, Position, Color);
+    }
+    public override void Collision()
+    {
+        //битва
     }
 }

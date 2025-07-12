@@ -11,12 +11,13 @@ public class Game1 : Game
     private SpriteBatch _spriteBatch;
 
     Texture2D Maptexture;
+    Texture2D PlayerTexture; // Текстура игрока
 
     private PlayMap _playMap;
 
     // Размеры игрового поля (в клетках)
-    private const int GridWidth = 5;
-    private const int GridHeight = 5;
+    private const int GridWidth = 6;
+    private const int GridHeight = 6;
 
     // Размер одной клетки
     private const int CellSize = 64;
@@ -27,6 +28,8 @@ public class Game1 : Game
     bool wPressed = false;
 
     MovingSprite _EshSprite;
+    private Vector2 _playerGridPosition; // Позиция игрока на сетке (в координатах сетки)
+
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
@@ -36,15 +39,13 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        // TODO: Add your initialization logic here
-
         _graphics.IsFullScreen = false;
         _graphics.PreferredBackBufferWidth = 650;
         _graphics.PreferredBackBufferHeight = 650;
         _graphics.ApplyChanges();
 
         _playMap = new PlayMap(GridWidth, GridHeight, CellSize);
-        
+
 
         base.Initialize();
     }
@@ -53,13 +54,13 @@ public class Game1 : Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        // TODO: use this.Content to load your game content here
-
-        Texture2D texture = Content.Load<Texture2D>("player");
-        _EshSprite = new MovingSprite(texture, Vector2.Zero);
+        PlayerTexture = Content.Load<Texture2D>("player"); // Загрузка текстуры игрока
+        _EshSprite = new MovingSprite(PlayerTexture, Vector2.Zero);
 
         Maptexture = Content.Load<Texture2D>("Tile");
         _playMap.GenerateMap(Maptexture, Maptexture, Maptexture);
+        _playerGridPosition = Vector2.Zero; // Начальная позиция игрока на сетке (0, 0)
+        _EshSprite.position = _playMap.GetCellPosition(_playerGridPosition); // Устанавливаем позицию спрайта в соответствии с сеткой
     }
 
     protected override void Update(GameTime gameTime)
@@ -67,11 +68,27 @@ public class Game1 : Game
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
 
+        // Обработка ввода и перемещения
+        HandleInput();
+
+        // Обновление позиции спрайта (если перемещение произошло)
+        _EshSprite.position = _playMap.GetCellPosition(_playerGridPosition);
+
+
+        // Проверка коллизий и событий (бой)
+        CheckCollisions();
+
+        base.Update(gameTime);
+    }
+
+    private void HandleInput()
+    {
+        Vector2 newPosition = _playerGridPosition;
+
         if (!dPressed && Keyboard.GetState().IsKeyDown(Keys.D))
         {
             dPressed = true;
-            Debug.WriteLine("D");
-            _EshSprite.MoveRight();
+            newPosition.X++;
         }
         if (Keyboard.GetState().IsKeyUp(Keys.D))
         {
@@ -81,8 +98,7 @@ public class Game1 : Game
         if (!aPressed && Keyboard.GetState().IsKeyDown(Keys.A))
         {
             aPressed = true;
-            Debug.WriteLine("A");
-            _EshSprite.MoveLeft();
+            newPosition.X--;
         }
         if (Keyboard.GetState().IsKeyUp(Keys.A))
         {
@@ -92,8 +108,7 @@ public class Game1 : Game
         if (!wPressed && Keyboard.GetState().IsKeyDown(Keys.W))
         {
             wPressed = true;
-            Debug.WriteLine("W");
-            _EshSprite.MoveUp();
+            newPosition.Y--;
         }
         if (Keyboard.GetState().IsKeyUp(Keys.W))
         {
@@ -103,29 +118,43 @@ public class Game1 : Game
         if (!sPressed && Keyboard.GetState().IsKeyDown(Keys.S))
         {
             sPressed = true;
-            Debug.WriteLine("S");
-            _EshSprite.MoveDown();
+            newPosition.Y++;
         }
         if (Keyboard.GetState().IsKeyUp(Keys.S))
         {
             sPressed = false;
         }
 
-        // TODO: Add your update logic here
+        // Проверка на выход за границы карты и на стены
+        if (_playMap.IsCellWalkable(newPosition))
+        {
+            _playerGridPosition = newPosition;
 
-        base.Update(gameTime);
+            //_EshSprite.Move(_playMap.GetCellPosition(_playerGridPosition));
+        }
     }
+
+    private void CheckCollisions()
+    {
+        Cell currentCell = _playMap.GetCell(_playerGridPosition);
+
+        if (currentCell is EnemyCell)
+        {
+            Debug.WriteLine("Начался бой!");
+            //тут может быть ваш бой
+        }
+    }
+
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        // TODO: Add your drawing code here
-
         _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
 
         _playMap.Draw(_spriteBatch);
         _spriteBatch.Draw(_EshSprite.texture, _EshSprite.Rect, Color.White);
+
 
         _spriteBatch.End();
 
