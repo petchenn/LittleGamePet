@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 // Базовый класс для всех ячеек
 public abstract class Cell
 {
+    public bool isDied = true;
     public Vector2 Position { get; set; }  // Координаты ячейки на поле
     public Color Color { get; set; } = Color.White; //  Цвет по умолчанию
     public Texture2D Texture { get; set; }
@@ -14,9 +15,8 @@ public abstract class Cell
         Texture = texture;
     }
 
-    public abstract void Update(GameTime gameTime);
+    public abstract void Update();
     public abstract void Draw(SpriteBatch spriteBatch);
-    public abstract void Collision();
 
 }
 
@@ -27,7 +27,7 @@ public class FloorCell : Cell
         Color = Color.Gray;
     }
 
-    public override void Update(GameTime gameTime)
+    public override void Update()
     {
     }
 
@@ -36,10 +36,6 @@ public class FloorCell : Cell
         spriteBatch.Draw(Texture, Position, Color);
     }
 
-    public override void Collision()
-    {
-        //целое ничего
-    }
 }
 
 // Класс для стены
@@ -49,7 +45,7 @@ public class WallCell : Cell
     {
         Color = Color.Brown; //  Например, коричневый цвет для стены
     }
-    public override void Update(GameTime gameTime)
+    public override void Update()
     {
         // Логика обновления для стены (если нужна)
     }
@@ -59,23 +55,19 @@ public class WallCell : Cell
         spriteBatch.Draw(Texture, Position, Color);
     }
 
-    public override void Collision()
-    {
-        //откидывание назад
-    }
 }
 
 // Класс для врага
 public class EnemyCell : Cell
 {
-    public bool isDied = false;
 
     public EnemyCell(Vector2 position, Texture2D texture) : base(position, texture)
     {
         Color = Color.Red;
+        isDied = false;
     }
 
-    public override void Update(GameTime gameTime)
+    public override void Update()
     {
         if (isDied) Color = Color.White;
     }
@@ -83,9 +75,5 @@ public class EnemyCell : Cell
     public override void Draw(SpriteBatch spriteBatch)
     {
         spriteBatch.Draw(Texture, Position, Color);
-    }
-    public override void Collision()
-    {
-        //битва
     }
 }

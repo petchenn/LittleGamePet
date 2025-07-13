@@ -52,6 +52,7 @@ namespace LittlePet
                 {
                     for (int y = 0; y < height; y++)
                     {
+                        cells[x, y].Update();
                         cells[x, y].Draw(spriteBatch);
                     }
                 }

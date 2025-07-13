@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<XnaContent xmlns:Graphics="Microsoft.Xna.Framework.Content.Pipeline.Graphics">
+	<Asset Type="Graphics:FontDescription">
+		<FontName>Font</FontName>
+		<!-- Замените на имя вашего файла шрифта (.ttf или .otf) -->
+		<Size>16</Size>
+		<!-- Размер шрифта -->
+		<Spacing>0</Spacing>
+		<!-- Расстояние между символами -->
+		<UseKerning>true</UseKerning>
+		<!-- Использовать кернинг (если поддерживается шрифтом) -->
+		<Style>Regular</Style>
+		<!-- Стиль: Regular, Bold, Italic, BoldItalic -->
+		<CharacterRegions>
+			<!-- Символы, которые нужно включить в шрифт -->
+			<CharacterRegion>
+				<Start>&#32;</Start>
+				<!-- Пробел -->
+				<End>&#126;</End>
+				<!-- Тильда (обычные ASCII символы) -->
+			</CharacterRegion>
+		</CharacterRegions>
+	</Asset>
+</XnaContent>
