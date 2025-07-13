@@ -15,8 +15,9 @@ namespace LittlePet
         public int AttackStat { get; set; }
         public int DefenseStat { get; set; }
         public ScaledSprite Sprite { get; set; }
+        public Texture2D evolveTexture { get; set; }
 
-        public Pokemon(string name, Texture2D texture, int level, int maxHealth, List<Ability> abilities, PokemonType type, int attackStat, int defenseStat)
+        public Pokemon(string name, Texture2D textureFirst, Texture2D textureEvolve, int level, int maxHealth, List<Ability> abilities, PokemonType type, int attackStat, int defenseStat)
         {
             Name = name;
             Level = level;
@@ -26,7 +27,8 @@ namespace LittlePet
             Type = type;
             AttackStat = attackStat;
             DefenseStat = defenseStat;
-            Sprite = new ScaledSprite(texture);
+            Sprite = new ScaledSprite(textureFirst);
+            evolveTexture = textureEvolve;
         }
 
         public void Attack(Pokemon target, Ability ability)
@@ -70,12 +72,18 @@ namespace LittlePet
             Level += amount;
             Console.WriteLine($"{Name} gained {amount} levels! New level: {Level}");
             // Можно добавить логику для увеличения характеристик
+            if (Level >= 10) Evolve();
         }
 
         public void Evolve()
         {
             Console.WriteLine($"{Name} is trying to evolve!");
-            // Добавьте здесь логику эволюции (смена имени, характеристик, спрайта и т.д.)
+            Sprite.texture = evolveTexture;
+            Name = "THE " + Name;
+            MaxHealth *= 2;
+            Health = MaxHealth;
+            AttackStat *= 2;
+            DefenseStat *= 2;
         }
     }
 }

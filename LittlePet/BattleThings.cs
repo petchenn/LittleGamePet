@@ -32,7 +32,7 @@ public class BattleManager
     public void StartBattle(Pokemon playerPokemon)
     {
 
-        EnemyPokemon = new Pokemon("Wild Pidgey", _enemyTexture, 3, 30, new List<Ability>() { new Ability("Tackle", PokemonType.normal, 30) }, PokemonType.normal, 30, 20);
+        EnemyPokemon = new Pokemon("Wild Pidgey", _enemyTexture, _enemyTexture, 3, 30, new List<Ability>() { new Ability("Tackle", PokemonType.normal, 30) }, PokemonType.normal, 30, 20);
         Console.WriteLine($"Вы напали на {EnemyPokemon.Name}!");
         BattleOver = false;
         PlayerWon = false;
