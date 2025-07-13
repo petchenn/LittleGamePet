@@ -61,7 +61,7 @@ public class BattleManager
         EnemyAttack(playerPokemon);
     }
 
-    private void EnemyAttack(Pokemon playerPokemon)
+    public void EnemyAttack(Pokemon playerPokemon)
     {
         if (EnemyPokemon.Health <= 0) return;
 
@@ -100,6 +100,6 @@ public class BattleManager
         }
 
         // Инструкции
-        _spriteBatch.DrawString(_font, "Press 1 or 2 to attack", new Vector2(100, 500), Color.White);
+        _spriteBatch.DrawString(_font, "Press 1 or 2 to attack, 3 to do nothing", new Vector2(100, 500), Color.White);
     }
 }

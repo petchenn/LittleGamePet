@@ -154,6 +154,15 @@ public class Game1 : Game
         {
             sPressed = false;
         }
+        if(!aPressed && Keyboard.GetState().IsKeyDown(Keys.D3))
+        {
+            aPressed = true;
+            _battleManager.EnemyAttack(_currentPokemon);
+        }
+        if (Keyboard.GetState().IsKeyUp(Keys.D3))
+        {
+            aPressed = false;
+        }
     }
 
     private void UpdateChoosingPokemon(GameTime gameTime)
