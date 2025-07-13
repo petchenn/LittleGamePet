@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LittlePet
 {
-    class Sprite
+    public class Sprite
     {
         public Texture2D texture;
         public Vector2 position;
@@ -17,6 +17,11 @@ namespace LittlePet
         {
             this.texture = texture;
             this.position = position;
+        }
+
+        public void setPocition(Vector2 newPos)
+        {
+            position = newPos;
         }
         public virtual void Update() { }
     }

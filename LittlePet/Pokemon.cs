@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 
 namespace LittlePet
@@ -10,11 +11,12 @@ namespace LittlePet
         public int Health { get; set; }
         public int MaxHealth { get; set; }
         public List<Ability> Abilities { get; set; }
-        public PokemonType Type { get; set; } // Добавляем тип покемона
-        public int AttackStat { get; set; } // Добавляем стат атаки
-        public int DefenseStat { get; set; } // Добавляем стат защиты
+        public PokemonType Type { get; set; }
+        public int AttackStat { get; set; }
+        public int DefenseStat { get; set; }
+        public ScaledSprite Sprite { get; set; }
 
-        public Pokemon(string name, int level, int maxHealth, List<Ability> abilities, PokemonType type, int attackStat, int defenseStat)
+        public Pokemon(string name, Texture2D texture, int level, int maxHealth, List<Ability> abilities, PokemonType type, int attackStat, int defenseStat)
         {
             Name = name;
             Level = level;
@@ -24,26 +26,25 @@ namespace LittlePet
             Type = type;
             AttackStat = attackStat;
             DefenseStat = defenseStat;
+            Sprite = new ScaledSprite(texture);
         }
 
         public void Attack(Pokemon target, Ability ability)
         {
-            Console.WriteLine($"{Name} uses {ability.Name}!"); // Вывод в консоль (замените на отображение в игре)
+            Console.WriteLine($"{Name} uses {ability.Name}!");
 
-            // Урон учитывает атаку, защиту и силу способности
             int damage = CalculateDamage(target, ability);
             target.TakeDamage(damage);
         }
 
         private int CalculateDamage(Pokemon target, Ability ability)
         {
-            // Простая формула урона (нужно балансировать)
             float typeModifier = GetTypeModifier(ability.Type, target.Type);
             int damage = (int)(((2 * Level / 5.0 + 2) * ability.Power * AttackStat / target.DefenseStat / 50 + 2) * typeModifier);
             return Math.Max(1, damage); // Минимум 1 урона
         }
 
-        // Таблица эффективности типов (пример)
+        // Таблица эффективности типов
         private float GetTypeModifier(PokemonType attackType, PokemonType targetType)
         {
             if (attackType == PokemonType.fire && targetType == PokemonType.water) return 0.5f;
@@ -61,20 +62,18 @@ namespace LittlePet
         public void Heal(int amount)
         {
             Health += amount;
-            Health = Math.Min(MaxHealth, Health); // Здоровье не может быть больше MaxHealth
+            Health = Math.Min(MaxHealth, Health);
         }
 
         public void GainExp(int amount)
         {
-            // Простая реализация опыта (доработать)
             Level += amount;
             Console.WriteLine($"{Name} gained {amount} levels! New level: {Level}");
-            // Можно добавить логику для увеличения характеристик при повышении уровня
+            // Можно добавить логику для увеличения характеристик
         }
 
         public void Evolve()
         {
-            // Реализация эволюции (зависит от конкретных покемонов)
             Console.WriteLine($"{Name} is trying to evolve!");
             // Добавьте здесь логику эволюции (смена имени, характеристик, спрайта и т.д.)
         }

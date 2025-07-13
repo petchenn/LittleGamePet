@@ -33,8 +33,6 @@ public class Game1 : Game
     private List<Pokemon> _playerTeam = new List<Pokemon>();
     private Pokemon _currentPokemon;
 
-    //private Pokemon _enemyPokemon;  //Удаляем отсюда
-
     private enum GameState { Map, Battle, ChoosingPokemon }
     private GameState _currentGameState = GameState.ChoosingPokemon;
 
@@ -80,9 +78,9 @@ public class Game1 : Game
 
         _font = Content.Load<SpriteFont>("Font");
 
-        _availablePokemon.Add(new Pokemon("Charmander", 5, 50, new List<Ability>() { new Ability("Ember", PokemonType.fire, 40) }, PokemonType.fire, 60, 40));
-        _availablePokemon.Add(new Pokemon("Squirtle", 5, 55, new List<Ability>() { new Ability("Water Gun", PokemonType.water, 40) }, PokemonType.water, 45, 65));
-        _availablePokemon.Add(new Pokemon("Bulbasaur", 5, 60, new List<Ability>() { new Ability("Vine Whip", PokemonType.normal, 35) }, PokemonType.normal, 50, 50));
+        _availablePokemon.Add(new Pokemon("Charmander", Content.Load<Texture2D>("pok1"), 5, 50, new List<Ability>() { new Ability("Ember", PokemonType.fire, 40) }, PokemonType.fire, 60, 40));
+        _availablePokemon.Add(new Pokemon("Squirtle", Content.Load<Texture2D>("pok2"), 5, 55, new List<Ability>() { new Ability("Water Gun", PokemonType.water, 40) }, PokemonType.water, 45, 65));
+        _availablePokemon.Add(new Pokemon("Bulbasaur", Content.Load<Texture2D>("pok3"), 5, 60, new List<Ability>() { new Ability("Vine Whip", PokemonType.normal, 35) }, PokemonType.normal, 50, 50));
 
         // Инициализация BattleManager
         _battleManager = new BattleManager(Content, _spriteBatch, _font, PlayerTexture, EnemyTexture); // Передаем необходимые зависимости

@@ -31,7 +31,8 @@ public class BattleManager
 
     public void StartBattle(Pokemon playerPokemon)
     {
-        EnemyPokemon = new Pokemon("Wild Pidgey", 3, 30, new List<Ability>() { new Ability("Tackle", PokemonType.normal, 30) }, PokemonType.normal, 30, 20);
+
+        EnemyPokemon = new Pokemon("Wild Pidgey", _enemyTexture, 3, 30, new List<Ability>() { new Ability("Tackle", PokemonType.normal, 30) }, PokemonType.normal, 30, 20);
         Console.WriteLine($"Вы напали на {EnemyPokemon.Name}!");
         BattleOver = false;
         PlayerWon = false;
@@ -80,8 +81,10 @@ public class BattleManager
         graphicsDevice.Clear(Color.Gray);
 
         // Отображаем спрайты покемонов (позиции нужно настроить)
-        _spriteBatch.Draw(_playerTexture, new Vector2(100, 300), Color.White); // Спрайт игрока
-        _spriteBatch.Draw(_enemyTexture, new Vector2(500, 100), Color.White); // Спрайт врага
+        currentPokemon.Sprite.setPocition(new Vector2(100, 300));
+        _spriteBatch.Draw(currentPokemon.Sprite.texture, currentPokemon.Sprite.Rect, Color.White); // Спрайт игрока
+        EnemyPokemon.Sprite.setPocition(new Vector2(500, 100));
+        _spriteBatch.Draw(EnemyPokemon.Sprite.texture, EnemyPokemon.Sprite.Rect, Color.White); // Спрайт врага
 
         // Отображаем имена и здоровье
         _spriteBatch.DrawString(_font, $"{currentPokemon.Name} (Lv.{currentPokemon.Level})", new Vector2(100, 250), Color.White);

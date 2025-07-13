@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LittlePet
 {
-    class MovingSprite : ScaledSprite
+    public class MovingSprite : ScaledSprite
     {
         private float _speed;
         public MovingSprite(Texture2D texture, Vector2 position, float speed = 64) : base(texture, position)

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LittlePet
 {
-    class ScaledSprite : Sprite
+    public class ScaledSprite : Sprite
     {
         public Rectangle Rect
         {
@@ -19,6 +19,9 @@ namespace LittlePet
         }
 
         public ScaledSprite(Texture2D texture, Vector2 position) : base(texture, position) { 
+        }
+        public ScaledSprite(Texture2D texture) : base(texture, new Vector2(0,0))
+        {
         }
     }
 }
