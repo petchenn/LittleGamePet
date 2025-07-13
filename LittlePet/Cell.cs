@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 public abstract class Cell
 {
     public bool isDied = true;
+    public bool isUsed = true;
     public Vector2 Position { get; set; }  // Координаты ячейки на поле
     public Color Color { get; set; } = Color.White; //  Цвет по умолчанию
     public Texture2D Texture { get; set; }
@@ -60,7 +61,6 @@ public class WallCell : Cell
 // Класс для врага
 public class EnemyCell : Cell
 {
-
     public EnemyCell(Vector2 position, Texture2D texture) : base(position, texture)
     {
         Color = Color.Red;
@@ -72,6 +72,23 @@ public class EnemyCell : Cell
         if (isDied) Color = Color.White;
     }
 
+    public override void Draw(SpriteBatch spriteBatch)
+    {
+        spriteBatch.Draw(Texture, Position, Color);
+    }
+}
+
+public class HealCell : Cell
+{
+    public HealCell(Vector2 position, Texture2D texture) : base(position, texture)
+    {
+        Color = Color.Green;
+        isUsed = false;
+    }
+    public override void Update()
+    {
+        if (isUsed) Color = Color.White;
+    }
     public override void Draw(SpriteBatch spriteBatch)
     {
         spriteBatch.Draw(Texture, Position, Color);

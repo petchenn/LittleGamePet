@@ -257,6 +257,14 @@ public class Game1 : Game
             StartBattle();
             currentCell.isDied = true;
         }
+        if(currentCell is HealCell && !currentCell.isUsed)
+        {
+            foreach(Pokemon pok in _playerTeam)
+            {
+                pok.Heal(pok.MaxHealth);
+            }
+            currentCell.isUsed = true;
+        }
     }
 
     private void StartBattle()

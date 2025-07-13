@@ -41,8 +41,8 @@ namespace LittlePet
             cells[3, 1] = new WallCell(new Vector2(3 * cellSize, 1 * cellSize), Walltexture);
 
             cells[1, 4] = new EnemyCell(new Vector2(1 * cellSize, 4 * cellSize), Enemytexture);
-
             cells[3, 4] = new EnemyCell(new Vector2(3 * cellSize, 4 * cellSize), Enemytexture);
+            cells[2, 4] = new HealCell(new Vector2(2 * cellSize, 4 * cellSize), Walltexture);
         }
 
         public void Draw(SpriteBatch spriteBatch)
