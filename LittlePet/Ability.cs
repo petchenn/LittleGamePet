@@ -11,7 +11,7 @@ namespace LittlePet
     {
         fire, water, normal
     }
-    class Ability
+    public class Ability
     {
         public string Name { get; set; }
         public PokemonType Type { get; set; }

@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace LittlePet;
 
@@ -14,7 +13,7 @@ public class Game1 : Game
 
     Texture2D Maptexture;
     Texture2D PlayerTexture;
-    Texture2D EnemyTexture; // Добавляем текстуру врага
+    Texture2D EnemyTexture;
 
     private PlayMap _playMap;
 
@@ -32,9 +31,9 @@ public class Game1 : Game
     private Vector2 _playerGridPosition;
 
     private List<Pokemon> _playerTeam = new List<Pokemon>();
-    private Pokemon _currentPokemon; // Текущий активный покемон
+    private Pokemon _currentPokemon;
 
-    private Pokemon _enemyPokemon;
+    //private Pokemon _enemyPokemon;  //Удаляем отсюда
 
     private enum GameState { Map, Battle, ChoosingPokemon }
     private GameState _currentGameState = GameState.ChoosingPokemon;
@@ -43,6 +42,9 @@ public class Game1 : Game
     private int _selectedPokemonIndex = 0;
 
     private SpriteFont _font;
+
+    // Добавляем экземпляр класса BattleManager
+    private BattleManager _battleManager;
 
     public Game1()
     {
@@ -76,11 +78,14 @@ public class Game1 : Game
         _playerGridPosition = Vector2.Zero;
         _EshSprite.position = _playMap.GetCellPosition(_playerGridPosition);
 
-        _font = Content.Load<SpriteFont>("Font"); // Загрузите шрифт
+        _font = Content.Load<SpriteFont>("Font");
 
         _availablePokemon.Add(new Pokemon("Charmander", 5, 50, new List<Ability>() { new Ability("Ember", PokemonType.fire, 40) }, PokemonType.fire, 60, 40));
         _availablePokemon.Add(new Pokemon("Squirtle", 5, 55, new List<Ability>() { new Ability("Water Gun", PokemonType.water, 40) }, PokemonType.water, 45, 65));
         _availablePokemon.Add(new Pokemon("Bulbasaur", 5, 60, new List<Ability>() { new Ability("Vine Whip", PokemonType.normal, 35) }, PokemonType.normal, 50, 50));
+
+        // Инициализация BattleManager
+        _battleManager = new BattleManager(Content, _spriteBatch, _font, PlayerTexture, EnemyTexture); // Передаем необходимые зависимости
     }
 
     protected override void Update(GameTime gameTime)
@@ -113,11 +118,30 @@ public class Game1 : Game
 
     private void UpdateBattle(GameTime gameTime)
     {
+        _battleManager.Update(gameTime, _currentPokemon);
+
+        if (_battleManager.BattleOver)
+        {
+            if (_battleManager.PlayerWon)
+            {
+                Console.WriteLine($"{_battleManager.EnemyPokemon.Name} побежден!");
+                _currentPokemon.GainExp(10);
+                _currentGameState = GameState.Map;
+            }
+            else
+            {
+                Console.WriteLine($"{_currentPokemon.Name} был побежден!");
+                //TODO:  Смена покемона в команде, если он проиграл. Если все проиграли - Game Over
+                _currentGameState = GameState.Map;
+            }
+            _battleManager.BattleOver = false;
+        }
+
         // Обработка ввода в бою (выбор способности, и т.д.)
         if (!wPressed && Keyboard.GetState().IsKeyDown(Keys.D1))
         {
             wPressed = true;
-            PlayerAttack(0);
+            _battleManager.PlayerAttack(0, _currentPokemon);
         }
         if (Keyboard.GetState().IsKeyUp(Keys.D1))
         {
@@ -126,7 +150,7 @@ public class Game1 : Game
         else if (!sPressed && Keyboard.GetState().IsKeyDown(Keys.D2) && _currentPokemon.Abilities.Count > 1)
         {
             sPressed = true;
-            PlayerAttack(1);
+            _battleManager.PlayerAttack(1, _currentPokemon);
         }
         if (Keyboard.GetState().IsKeyUp(Keys.D2))
         {
@@ -242,40 +266,8 @@ public class Game1 : Game
         Console.WriteLine("Начался бой!");
         _currentGameState = GameState.Battle;
 
-        _enemyPokemon = new Pokemon("Wild Pidgey", 3, 30, new List<Ability>() { new Ability("Tackle", PokemonType.normal, 30) }, PokemonType.normal, 30, 20);
-        Console.WriteLine($"Вы напали на {_enemyPokemon.Name}!");
-    }
-
-    private void PlayerAttack(int abilityIndex)
-    {
-        if (_currentPokemon.Health <= 0 || _enemyPokemon.Health <= 0) return;
-
-        Ability ability = _currentPokemon.Abilities[abilityIndex];
-        _currentPokemon.Attack(_enemyPokemon, ability);
-
-        if (_enemyPokemon.Health <= 0)
-        {
-            Console.WriteLine($"{_enemyPokemon.Name} побежден!");
-            _currentPokemon.GainExp(10);
-            _currentGameState = GameState.Map;
-            return;
-        }
-
-        EnemyAttack();
-    }
-
-    private void EnemyAttack()
-    {
-        if (_enemyPokemon.Health <= 0) return;
-
-        _enemyPokemon.Attack(_currentPokemon, _enemyPokemon.Abilities[0]);
-
-        if (_currentPokemon.Health <= 0)
-        {
-            Console.WriteLine($"{_currentPokemon.Name} был побежден!");
-            //TODO:  Смена покемона в команде, если он проиграл. Если все проиграли - Game Over
-            _currentGameState = GameState.Map;
-        }
+        // Инициализируем вражеского покемона через BattleManager
+        _battleManager.StartBattle(_currentPokemon);  // Теперь BattleManager сам создает врага
     }
 
     protected override void Draw(GameTime gameTime)
@@ -310,27 +302,7 @@ public class Game1 : Game
 
     private void DrawBattle()
     {
-        GraphicsDevice.Clear(Color.Gray);
-
-        // Отображаем спрайты покемонов (позиции нужно настроить)
-        _spriteBatch.Draw(PlayerTexture, new Vector2(100, 300), Color.White); // Спрайт игрока
-        _spriteBatch.Draw(EnemyTexture, new Vector2(500, 100), Color.White); // Спрайт врага
-
-        // Отображаем имена и здоровье
-        _spriteBatch.DrawString(_font, $"{_currentPokemon.Name} (Lv.{_currentPokemon.Level})", new Vector2(100, 250), Color.White);
-        _spriteBatch.DrawString(_font, $"HP: {_currentPokemon.Health}/{_currentPokemon.MaxHealth}", new Vector2(100, 270), Color.White);
-
-        _spriteBatch.DrawString(_font, $"{_enemyPokemon.Name} (Lv.{_enemyPokemon.Level})", new Vector2(500, 50), Color.White);
-        _spriteBatch.DrawString(_font, $"HP: {_enemyPokemon.Health}/{_enemyPokemon.MaxHealth}", new Vector2(500, 70), Color.White);
-
-        // Отображаем доступные способности
-        for (int i = 0; i < _currentPokemon.Abilities.Count; i++)
-        {
-            _spriteBatch.DrawString(_font, $"{i + 1}: {_currentPokemon.Abilities[i].Name} ({_currentPokemon.Abilities[i].Type})", new Vector2(100, 400 + i * 20), Color.White);
-        }
-
-        // Инструкции
-        _spriteBatch.DrawString(_font, "Press 1 or 2 to attack", new Vector2(100, 500), Color.White);
+        _battleManager.Draw(_spriteBatch, _currentPokemon);
     }
 
     private void DrawChoosingPokemon()

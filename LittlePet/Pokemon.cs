@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LittlePet
 {
-    class Pokemon
+    public class Pokemon
     {
         public string Name { get; set; }
         public int Level { get; set; }
