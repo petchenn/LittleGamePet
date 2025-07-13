@@ -62,16 +62,22 @@ namespace LittlePet
 
         public int GetEnemyCount()
         {
+            int count = 0;
+            foreach(Cell cell in cells)
+            {
+                if (cell is EnemyCell && !cell.isDied)
+                {
+                    count++;
+                }
+            }
             return 0;
         }
 
-        // Получить позицию клетки в мировых координатах по координатам сетки
         public Vector2 GetCellPosition(Vector2 gridPosition)
         {
             return new Vector2(gridPosition.X * cellSize, gridPosition.Y * cellSize);
         }
 
-        // Получить клетку по координатам сетки
         public Cell GetCell(Vector2 gridPosition)
         {
             if (gridPosition.X >= 0 && gridPosition.X < width && gridPosition.Y >= 0 && gridPosition.Y < height)

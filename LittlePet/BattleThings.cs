@@ -1,5 +1,4 @@
-﻿
-using LittlePet;
+﻿using LittlePet;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
@@ -31,9 +30,11 @@ public class BattleManager
 
     public void StartBattle(Pokemon playerPokemon)
     {
-
-        EnemyPokemon = new Pokemon("Wild Pidgey", _enemyTexture, _enemyTexture, 3, 30, new List<Ability>() { new Ability("Tackle", PokemonType.normal, 30) }, PokemonType.normal, 30, 20);
-        Console.WriteLine($"Вы напали на {EnemyPokemon.Name}!");
+        if (EnemyPokemon == null)
+        {
+            EnemyPokemon = new Pokemon("Wild Pidgey", _enemyTexture, _enemyTexture, 3, 30, new List<Ability>() { new Ability("Tackle", PokemonType.normal, 30) }, PokemonType.normal, 30, 20);
+            Console.WriteLine($"Вы напали на {EnemyPokemon.Name}!");
+        }
         BattleOver = false;
         PlayerWon = false;
     }
@@ -55,6 +56,7 @@ public class BattleManager
             Console.WriteLine($"{EnemyPokemon.Name} побежден!");
             BattleOver = true;
             PlayerWon = true;
+            //EnemyPokemon = null;
             return;
         }
 
@@ -83,15 +85,21 @@ public class BattleManager
         // Отображаем спрайты покемонов (позиции нужно настроить)
         currentPokemon.Sprite.setPocition(new Vector2(100, 300));
         _spriteBatch.Draw(currentPokemon.Sprite.texture, currentPokemon.Sprite.Rect, Color.White); // Спрайт игрока
-        EnemyPokemon.Sprite.setPocition(new Vector2(500, 100));
-        _spriteBatch.Draw(EnemyPokemon.Sprite.texture, EnemyPokemon.Sprite.Rect, Color.White); // Спрайт врага
+        if (EnemyPokemon != null)
+        {
+            EnemyPokemon.Sprite.setPocition(new Vector2(500, 100));
+            _spriteBatch.Draw(EnemyPokemon.Sprite.texture, EnemyPokemon.Sprite.Rect, Color.White);
+        } // Спрайт врага
 
         // Отображаем имена и здоровье
         _spriteBatch.DrawString(_font, $"{currentPokemon.Name} (Lv.{currentPokemon.Level})", new Vector2(100, 250), Color.White);
         _spriteBatch.DrawString(_font, $"HP: {currentPokemon.Health}/{currentPokemon.MaxHealth}", new Vector2(100, 270), Color.White);
 
-        _spriteBatch.DrawString(_font, $"{EnemyPokemon.Name} (Lv.{EnemyPokemon.Level})", new Vector2(500, 50), Color.White);
-        _spriteBatch.DrawString(_font, $"HP: {EnemyPokemon.Health}/{EnemyPokemon.MaxHealth}", new Vector2(500, 70), Color.White);
+        if (EnemyPokemon != null)
+        {
+            _spriteBatch.DrawString(_font, $"{EnemyPokemon.Name} (Lv.{EnemyPokemon.Level})", new Vector2(500, 50), Color.White);
+            _spriteBatch.DrawString(_font, $"HP: {EnemyPokemon.Health}/{EnemyPokemon.MaxHealth}", new Vector2(500, 70), Color.White);
+        }
 
         // Отображаем доступные способности
         for (int i = 0; i < currentPokemon.Abilities.Count; i++)

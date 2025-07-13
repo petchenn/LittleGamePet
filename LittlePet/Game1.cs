@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LittlePet;
 
@@ -31,9 +32,10 @@ public class Game1 : Game
     private Vector2 _playerGridPosition;
 
     private List<Pokemon> _playerTeam = new List<Pokemon>();
-    private Pokemon _currentPokemon;
+    private int _currentPokemonIndex = 0; // Индекс текущего покемона в команде
+    private Pokemon CurrentPokemon => _playerTeam[_currentPokemonIndex]; //Удобное свойство для доступа к текущему покемону
 
-    private enum GameState { Map, Battle, ChoosingPokemon }
+    private enum GameState { Map, Battle, ChoosingPokemon, GameOver } // Добавили GameOver
     private GameState _currentGameState = GameState.ChoosingPokemon;
 
     private List<Pokemon> _availablePokemon = new List<Pokemon>();
@@ -102,6 +104,9 @@ public class Game1 : Game
             case GameState.ChoosingPokemon:
                 UpdateChoosingPokemon(gameTime);
                 break;
+            case GameState.GameOver:
+                // Тут можно добавить логику для Game Over экрана
+                break;
         }
 
         base.Update(gameTime);
@@ -116,21 +121,21 @@ public class Game1 : Game
 
     private void UpdateBattle(GameTime gameTime)
     {
-        _battleManager.Update(gameTime, _currentPokemon);
+        _battleManager.Update(gameTime, CurrentPokemon);
 
         if (_battleManager.BattleOver)
         {
             if (_battleManager.PlayerWon)
             {
                 Console.WriteLine($"{_battleManager.EnemyPokemon.Name} побежден!");
-                _currentPokemon.GainExp(10);
+                _battleManager.EnemyPokemon = null;
+                CurrentPokemon.GainExp(10);
                 _currentGameState = GameState.Map;
             }
             else
             {
-                Console.WriteLine($"{_currentPokemon.Name} был побежден!");
-                //TODO:  Смена покемона в команде, если он проиграл. Если все проиграли - Game Over
-                _currentGameState = GameState.Map;
+                Console.WriteLine($"{CurrentPokemon.Name} был побежден!");
+                ChangePokemon();
             }
             _battleManager.BattleOver = false;
         }
@@ -139,31 +144,61 @@ public class Game1 : Game
         if (!wPressed && Keyboard.GetState().IsKeyDown(Keys.D1))
         {
             wPressed = true;
-            _battleManager.PlayerAttack(0, _currentPokemon);
+            _battleManager.PlayerAttack(0, CurrentPokemon);
         }
         if (Keyboard.GetState().IsKeyUp(Keys.D1))
         {
             wPressed = false;
         }
-        else if (!sPressed && Keyboard.GetState().IsKeyDown(Keys.D2) && _currentPokemon.Abilities.Count > 1)
+        else if (!sPressed && Keyboard.GetState().IsKeyDown(Keys.D2) && CurrentPokemon.Abilities.Count > 1)
         {
             sPressed = true;
-            _battleManager.PlayerAttack(1, _currentPokemon);
+            _battleManager.PlayerAttack(1, CurrentPokemon);
         }
         if (Keyboard.GetState().IsKeyUp(Keys.D2))
         {
             sPressed = false;
         }
-        if(!aPressed && Keyboard.GetState().IsKeyDown(Keys.D3))
+        if (!aPressed && Keyboard.GetState().IsKeyDown(Keys.D3))
         {
             aPressed = true;
-            _battleManager.EnemyAttack(_currentPokemon);
+            _battleManager.EnemyAttack(CurrentPokemon);
         }
         if (Keyboard.GetState().IsKeyUp(Keys.D3))
         {
             aPressed = false;
         }
     }
+
+    private void ChangePokemon()
+    {
+        // Ищем следующего живого покемона
+        int nextPokemonIndex = -1;
+        for (int i = 0; i < _playerTeam.Count; i++)
+        {
+            int index = (_currentPokemonIndex + i + 1) % _playerTeam.Count; // Перебираем по кругу
+            if (_playerTeam[index].Health > 0)
+            {
+                nextPokemonIndex = index;
+                break;
+            }
+        }
+
+        if (nextPokemonIndex != -1)
+        {
+            _currentPokemonIndex = nextPokemonIndex;
+            Console.WriteLine($"Выбран следующий покемон: {CurrentPokemon.Name}");
+            //_currentGameState = GameState.Map; // Возвращаемся на карту, если есть живые покемоны
+            _battleManager.StartBattle(CurrentPokemon); // Продолжаем бой новым покемоном
+
+        }
+        else
+        {
+            Console.WriteLine("Все покемоны в команде мертвы. Game Over!");
+            _currentGameState = GameState.GameOver;
+        }
+    }
+
 
     private void UpdateChoosingPokemon(GameTime gameTime)
     {
@@ -196,7 +231,7 @@ public class Game1 : Game
             if (_playerTeam.Count == 3)
             {
                 _currentGameState = GameState.Map;
-                _currentPokemon = _playerTeam[0];
+                //_currentPokemon = _playerTeam[0]; //Инициализация текущего покемона перенесена в свойство CurrentPokemon
                 Console.WriteLine("Команда сформирована!");
             }
         }
@@ -266,9 +301,9 @@ public class Game1 : Game
             StartBattle();
             currentCell.isDied = true;
         }
-        if(currentCell is HealCell && !currentCell.isUsed)
+        if (currentCell is HealCell && !currentCell.isUsed)
         {
-            foreach(Pokemon pok in _playerTeam)
+            foreach (Pokemon pok in _playerTeam)
             {
                 pok.Heal(pok.MaxHealth);
             }
@@ -281,8 +316,7 @@ public class Game1 : Game
         Console.WriteLine("Начался бой!");
         _currentGameState = GameState.Battle;
 
-        // Инициализируем вражеского покемона через BattleManager
-        _battleManager.StartBattle(_currentPokemon);  // Теперь BattleManager сам создает врага
+        _battleManager.StartBattle(CurrentPokemon);
     }
 
     protected override void Draw(GameTime gameTime)
@@ -302,6 +336,9 @@ public class Game1 : Game
             case GameState.ChoosingPokemon:
                 DrawChoosingPokemon();
                 break;
+            case GameState.GameOver:
+                DrawGameOver(); // Рисуем Game Over экран
+                break;
         }
 
         _spriteBatch.End();
@@ -317,7 +354,7 @@ public class Game1 : Game
 
     private void DrawBattle()
     {
-        _battleManager.Draw(_spriteBatch, _currentPokemon);
+        _battleManager.Draw(_spriteBatch, CurrentPokemon);
     }
 
     private void DrawChoosingPokemon()
@@ -336,5 +373,12 @@ public class Game1 : Game
 
         _spriteBatch.DrawString(_font, "Use Left/Right to select, Enter to choose", new Vector2(100, 500), Color.Black);
         _spriteBatch.DrawString(_font, $"Team size: {_playerTeam.Count}/3", new Vector2(100, 530), Color.Black);
+    }
+
+    private void DrawGameOver()
+    {
+        GraphicsDevice.Clear(Color.Black);
+        _spriteBatch.DrawString(_font, "Game Over! All your Pokemon fainted.", new Vector2(100, 100), Color.White);
+        _spriteBatch.DrawString(_font, "Press Esc to exit.", new Vector2(100, 150), Color.White);
     }
 }
