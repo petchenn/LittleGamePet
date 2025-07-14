@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System;
+using System.Diagnostics;
 
 public class BattleManager
 {
@@ -32,8 +33,8 @@ public class BattleManager
     {
         if (EnemyPokemon == null)
         {
-            EnemyPokemon = new Pokemon("Wild Pidgey", _enemyTexture, _enemyTexture, 3, 30, new List<Ability>() { new Ability("Tackle", PokemonType.normal, 30) }, PokemonType.normal, 30, 20);
-            Console.WriteLine($"Вы напали на {EnemyPokemon.Name}!");
+            EnemyPokemon = new Pokemon("Wild Pidgey", _enemyTexture, _enemyTexture, 3, 30, new List<Ability>() { new AttakAbility("Tackle", PokemonType.normal, 10) }, PokemonType.normal, 30, 20);
+            Debug.WriteLine($"Вы напали на {EnemyPokemon.Name}!");
         }
         BattleOver = false;
         PlayerWon = false;
@@ -49,14 +50,14 @@ public class BattleManager
         if (playerPokemon.Health <= 0 || EnemyPokemon.Health <= 0) return;
 
         Ability ability = playerPokemon.Abilities[abilityIndex];
-        playerPokemon.Attack(EnemyPokemon, ability);
+        //playerPokemon.Attack(EnemyPokemon, ability);
+        ability.UsingAbility(playerPokemon, EnemyPokemon);
 
         if (EnemyPokemon.Health <= 0)
         {
-            Console.WriteLine($"{EnemyPokemon.Name} побежден!");
+            Debug.WriteLine($"{EnemyPokemon.Name} побежден!");
             BattleOver = true;
             PlayerWon = true;
-            //EnemyPokemon = null;
             return;
         }
 
@@ -67,11 +68,12 @@ public class BattleManager
     {
         if (EnemyPokemon.Health <= 0) return;
 
-        EnemyPokemon.Attack(playerPokemon, EnemyPokemon.Abilities[0]);
+        EnemyPokemon.Abilities[0].UsingAbility(EnemyPokemon, playerPokemon);
+
 
         if (playerPokemon.Health <= 0)
         {
-            Console.WriteLine($"{playerPokemon.Name} был побежден!");
+            Debug.WriteLine($"{playerPokemon.Name} был побежден!");
             BattleOver = true;
             PlayerWon = false;
         }

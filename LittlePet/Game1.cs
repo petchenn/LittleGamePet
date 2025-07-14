@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace LittlePet;
@@ -79,9 +80,9 @@ public class Game1 : Game
 
         _font = Content.Load<SpriteFont>("Font");
 
-        _availablePokemon.Add(new Pokemon("Charmander", Content.Load<Texture2D>("pok1"), Content.Load<Texture2D>("evpok1"), 5, 50, new List<Ability>() { new Ability("Ember", PokemonType.fire, 40) }, PokemonType.fire, 60, 40));
-        _availablePokemon.Add(new Pokemon("Squirtle", Content.Load<Texture2D>("pok2"), Content.Load<Texture2D>("evpok2"), 5, 55, new List<Ability>() { new Ability("Water Gun", PokemonType.water, 65) }, PokemonType.water, 45, 65));
-        _availablePokemon.Add(new Pokemon("Bulbasaur", Content.Load<Texture2D>("pok3"), Content.Load<Texture2D>("evpok3"), 5, 60, new List<Ability>() { new Ability("Vine Whip", PokemonType.normal, 50) }, PokemonType.normal, 50, 50));
+        _availablePokemon.Add(new Pokemon("Charmander", Content.Load<Texture2D>("pok1"), Content.Load<Texture2D>("evpok1"), 5, 50, new List<Ability>() { new AttakAbility("Ember", PokemonType.fire, 10), new HealingAbility("Holy Fire", PokemonType.fire, 10) }, PokemonType.fire, 60, 40));
+        _availablePokemon.Add(new Pokemon("Squirtle", Content.Load<Texture2D>("pok2"), Content.Load<Texture2D>("evpok2"), 5, 55, new List<Ability>() { new AttakAbility("Water Gun", PokemonType.water, 15), new AttakAbility("A lot of water", PokemonType.normal, 80) }, PokemonType.water, 45, 65));
+        _availablePokemon.Add(new Pokemon("Bulbasaur", Content.Load<Texture2D>("pok3"), Content.Load<Texture2D>("evpok3"), 5, 60, new List<Ability>() { new AttakAbility("Vine Whip", PokemonType.normal, 10), new VampAbility("Vamp Whip", PokemonType.normal, 50) }, PokemonType.normal, 50, 50));
 
         _battleManager = new BattleManager(Content, _spriteBatch, _font, PlayerTexture, EnemyTexture);
     }
@@ -128,7 +129,7 @@ public class Game1 : Game
         {
             if (_battleManager.PlayerWon)
             {
-                Console.WriteLine($"{_battleManager.EnemyPokemon.Name} побежден!");
+                Debug.WriteLine($"{_battleManager.EnemyPokemon.Name} побежден!");
                 _battleManager.EnemyPokemon = null;
                 CurrentPokemon.GainExp(10);
                 if(_playMap.GetEnemyCount() <= 0) { _currentGameState = GameState.PlayerWin; }
@@ -136,7 +137,7 @@ public class Game1 : Game
             }
             else
             {
-                Console.WriteLine($"{CurrentPokemon.Name} был побежден!");
+                Debug.WriteLine($"{CurrentPokemon.Name} был побежден!");
                 ChangePokemon();
             }
             _battleManager.BattleOver = false;
@@ -152,9 +153,10 @@ public class Game1 : Game
         {
             wPressed = false;
         }
-        else if (!sPressed && Keyboard.GetState().IsKeyDown(Keys.D2) && CurrentPokemon.Abilities.Count > 1)
+        if (!sPressed && Keyboard.GetState().IsKeyDown(Keys.D2) && CurrentPokemon.Abilities.Count > 1)
         {
             sPressed = true;
+            Debug.WriteLine("Нажата кнопка 2.");
             _battleManager.PlayerAttack(1, CurrentPokemon);
         }
         if (Keyboard.GetState().IsKeyUp(Keys.D2))
@@ -196,7 +198,7 @@ public class Game1 : Game
         }
         else
         {
-            Console.WriteLine("Все покемоны в команде мертвы. Game Over!");
+            Debug.WriteLine("Все покемоны в команде мертвы. Game Over!");
             _currentGameState = GameState.GameOver;
         }
     }
@@ -234,7 +236,7 @@ public class Game1 : Game
             {
                 _currentGameState = GameState.Map;
                 //_currentPokemon = _playerTeam[0]; //Инициализация текущего покемона перенесена в свойство CurrentPokemon
-                Console.WriteLine("Команда сформирована!");
+                Debug.WriteLine("Команда сформирована!");
             }
         }
         if (Keyboard.GetState().IsKeyUp(Keys.Enter))
@@ -315,7 +317,7 @@ public class Game1 : Game
 
     private void StartBattle()
     {
-        Console.WriteLine("Начался бой!");
+        Debug.WriteLine("Начался бой!");
         _currentGameState = GameState.Battle;
 
         _battleManager.StartBattle(CurrentPokemon);

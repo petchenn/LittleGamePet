@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace LittlePet
 {
@@ -33,7 +35,7 @@ namespace LittlePet
 
         public void Attack(Pokemon target, Ability ability)
         {
-            Console.WriteLine($"{Name} uses {ability.Name}!");
+            Debug.WriteLine($"{Name} uses {ability.Name}!");
 
             int damage = CalculateDamage(target, ability);
             target.TakeDamage(damage);
@@ -58,11 +60,12 @@ namespace LittlePet
         {
             Health -= damage;
             Health = Math.Max(0, Health); // Здоровье не может быть меньше 0
-            Console.WriteLine($"{Name} takes {damage} damage! Health: {Health}"); // Вывод в консоль
+            Debug.WriteLine($"{Name} takes {damage} damage! Health: {Health}"); // Вывод в консоль
         }
 
         public void Heal(int amount)
         {
+            Debug.WriteLine($"{Name} healing! Health: {Health}"); // Вывод в консоль
             Health += amount;
             Health = Math.Min(MaxHealth, Health);
         }
@@ -70,20 +73,24 @@ namespace LittlePet
         public void GainExp(int amount)
         {
             Level += amount;
-            Console.WriteLine($"{Name} gained {amount} levels! New level: {Level}");
+            Debug.WriteLine($"{Name} gained {amount} levels! New level: {Level}");
             // Можно добавить логику для увеличения характеристик
             if (Level >= 10) Evolve();
         }
 
         public void Evolve()
         {
-            Console.WriteLine($"{Name} is trying to evolve!");
+            Debug.WriteLine($"{Name} is trying to evolve!");
             Sprite.texture = evolveTexture;
             Name = "THE " + Name;
             MaxHealth *= 2;
             Health = MaxHealth;
             AttackStat *= 2;
             DefenseStat *= 2;
+            foreach(Ability ability in Abilities)
+            {
+                ability.Power += 20;
+            }
         }
     }
 }

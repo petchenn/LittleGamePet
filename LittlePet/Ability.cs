@@ -11,7 +11,7 @@ namespace LittlePet
     {
         fire, water, normal
     }
-    public class Ability
+    public abstract class Ability
     {
         public string Name { get; set; }
         public PokemonType Type { get; set; }
@@ -23,5 +23,39 @@ namespace LittlePet
             Type = type;
             Power = power;
         }
+        public abstract void UsingAbility(Pokemon pokemon, Pokemon enemy);
     }
+    public class HealingAbility : Ability
+    {
+        public HealingAbility(string name, PokemonType type, int power) : base(name, type, power)
+        {
+        }
+        public override void UsingAbility(Pokemon pokemon, Pokemon enemy)
+        {
+            pokemon.Heal(Power);
+        }
+    }
+    public class VampAbility : Ability
+    {
+        public VampAbility(string name, PokemonType type, int power) : base(name, type, power)
+        {
+        }
+        public override void UsingAbility(Pokemon pokemon, Pokemon enemy)
+        {
+            pokemon.Heal((int)Power / 2);
+            enemy.TakeDamage((int)Power / 2);
+        }
+    }
+    public class AttakAbility : Ability
+    {
+        public AttakAbility(string name, PokemonType type, int power) : base(name, type, power)
+        {
+        }
+        public override void UsingAbility(Pokemon pokemon, Pokemon enemy)
+        {
+            enemy.TakeDamage(Power);
+        }
+    }
+
+
 }
