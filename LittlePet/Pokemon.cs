@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text.Json.Serialization;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace LittlePet
@@ -12,13 +13,15 @@ namespace LittlePet
         public int Level { get; set; }
         public int Health { get; set; }
         public int MaxHealth { get; set; }
-        public List<Ability> Abilities { get; set; }
+        [JsonIgnore] public List<Ability> Abilities { get; set; }
         public PokemonType Type { get; set; }
         public int AttackStat { get; set; }
         public int DefenseStat { get; set; }
-        public ScaledSprite Sprite { get; set; }
-        public Texture2D evolveTexture { get; set; }
+        [JsonIgnore]public ScaledSprite Sprite { get; set; }
+        [JsonIgnore]public Texture2D evolveTexture { get; set; }
 
+
+        public Pokemon() { }
         public Pokemon(string name, Texture2D textureFirst, Texture2D textureEvolve, int level, int maxHealth, List<Ability> abilities, PokemonType type, int attackStat, int defenseStat)
         {
             Name = name;

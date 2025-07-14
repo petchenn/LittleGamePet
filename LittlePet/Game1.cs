@@ -4,7 +4,9 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 
 namespace LittlePet;
 
@@ -32,15 +34,24 @@ public class Game1 : Game
     private Player _player;
     private MovingSprite _EshSprite;
 
-    private enum GameState { Map, Battle, ChoosingPokemon, GameOver, PlayerWin }
-    private GameState _currentGameState = GameState.ChoosingPokemon;
+    private enum GameState { Map, Battle, ChoosingPokemon, GameOver, PlayerWin, MainMenu }
+    private GameState _currentGameState = GameState.MainMenu;
 
-    private List<Pokemon> _availablePokemon = new List<Pokemon>();
-    private int _selectedPokemonIndex = 0;
+    public List<Pokemon> _availablePokemon = new List<Pokemon>();
+    public int selectedPokemonIndex = 0;
+    public int selectedField = 0;
+
+    private Texture2D CharmanderTexture, TheCharmanderTexture;
+    private Texture2D SquirtleTexture, TheSquirtleTexture;
+    private Texture2D BulbasaurTexture, TheBulbasaurTexture;
+
 
     private SpriteFont _font;
 
     private BattleManager _battleManager;
+    private bool tabPressed;
+    private const string PATHPLAYER = "savePlayer.json";
+    private const string PATHMAP = "saveMap.json";
 
     public Game1()
     {
@@ -72,14 +83,41 @@ public class Game1 : Game
 
         Maptexture = Content.Load<Texture2D>("Tile");
         _playMap.GenerateMap(Maptexture, Maptexture, Maptexture);
-        _player.GridPosition = Vector2.Zero;
-        _EshSprite.position = _playMap.GetCellPosition(_player.GridPosition);
+        _player.XGridPosition = 0;
+        _player.YGridPosition = 0;
+        _EshSprite.position = _playMap.GetCellPosition(new Vector2(_player.XGridPosition, _player.YGridPosition));
 
         _font = Content.Load<SpriteFont>("Font");
 
-        _availablePokemon.Add(new Pokemon("Charmander", Content.Load<Texture2D>("pok1"), Content.Load<Texture2D>("evpok1"), 5, 50, new List<Ability>() { new AttakAbility("Ember", PokemonType.fire, 10), new HealingAbility("Holy Fire", PokemonType.fire, 10) }, PokemonType.fire, 60, 40));
-        _availablePokemon.Add(new Pokemon("Squirtle", Content.Load<Texture2D>("pok2"), Content.Load<Texture2D>("evpok2"), 5, 55, new List<Ability>() { new AttakAbility("Water Gun", PokemonType.water, 15), new AttakAbility("A lot of water", PokemonType.normal, 80) }, PokemonType.water, 45, 65));
-        _availablePokemon.Add(new Pokemon("Bulbasaur", Content.Load<Texture2D>("pok3"), Content.Load<Texture2D>("evpok3"), 5, 60, new List<Ability>() { new AttakAbility("Vine Whip", PokemonType.normal, 10), new VampAbility("Vamp Whip", PokemonType.normal, 50) }, PokemonType.normal, 50, 50));
+        CharmanderTexture = Content.Load<Texture2D>("pok1");
+        TheCharmanderTexture = Content.Load<Texture2D>("evpok1");
+        SquirtleTexture = Content.Load<Texture2D>("pok2");
+        TheSquirtleTexture = Content.Load<Texture2D>("evpok2");
+        BulbasaurTexture = Content.Load<Texture2D>("pok3");
+        TheBulbasaurTexture = Content.Load<Texture2D>("evpok3");
+
+        // Создаем способности через фабричный метод
+        var charmanderAbilities = new List<Ability>
+        {
+            Ability.Create(nameof(AttakAbility), "Ember", PokemonType.fire, 10),
+            Ability.Create(nameof(HealingAbility), "Holy Fire", PokemonType.fire, 10)
+        };
+
+        var squirtleAbilities = new List<Ability>
+        {
+            Ability.Create(nameof(AttakAbility), "Water Gun", PokemonType.water, 15),
+            Ability.Create(nameof(AttakAbility), "A lot of water", PokemonType.normal, 80)
+        };
+
+        var bulbasaurAbilities = new List<Ability>
+        {
+            Ability.Create(nameof(AttakAbility), "Vine Whip", PokemonType.normal, 10),
+            Ability.Create(nameof(VampAbility), "Vamp Whip", PokemonType.normal, 50)
+        };
+
+        _availablePokemon.Add(new Pokemon("Charmander", CharmanderTexture, TheCharmanderTexture, 5, 50, charmanderAbilities, PokemonType.fire, 60, 40));
+        _availablePokemon.Add(new Pokemon("Squirtle", SquirtleTexture, TheSquirtleTexture, 5, 55, squirtleAbilities, PokemonType.water, 45, 65));
+        _availablePokemon.Add(new Pokemon("Bulbasaur", BulbasaurTexture, TheBulbasaurTexture, 5, 60, bulbasaurAbilities, PokemonType.normal, 50, 50));
 
         _battleManager = new BattleManager(Content, _spriteBatch, _font, PlayerTexture, EnemyTexture);
     }
@@ -104,6 +142,9 @@ public class Game1 : Game
                 break;
             case GameState.PlayerWin:
                 break;
+            case GameState.MainMenu:
+                UpdateMainMenu();
+                break;
             default:
                 break;
         }
@@ -114,13 +155,13 @@ public class Game1 : Game
     private void UpdateMap(GameTime gameTime)
     {
         HandleInput();
-        _EshSprite.position = _playMap.GetCellPosition(_player.GridPosition);
+        _EshSprite.position = _playMap.GetCellPosition(new Vector2(_player.XGridPosition, _player.YGridPosition));
         CheckCollisions();
     }
 
     private void UpdateBattle(GameTime gameTime)
     {
-        _battleManager.Update(gameTime, _player.CurrentPokemon);
+        _battleManager.Update(gameTime, _player.CurrentPokemon());
 
         if (_battleManager.BattleOver)
         {
@@ -128,21 +169,21 @@ public class Game1 : Game
             {
                 Debug.WriteLine($"{_battleManager.EnemyPokemon.Name} побежден!");
                 _battleManager.EnemyPokemon = null;
-                _player.CurrentPokemon.GainExp(10);
+                _player.CurrentPokemon().GainExp(10);
                 if (_playMap.GetEnemyCount() <= 0) { _currentGameState = GameState.PlayerWin; }
                 else _currentGameState = GameState.Map;
             }
             else
             {
-                Debug.WriteLine($"{_player.CurrentPokemon.Name} был побежден!");
+                Debug.WriteLine($"{_player.CurrentPokemon().Name} был побежден!");
                 _player.ChangePokemon();
-                if (_player.CurrentPokemon == null)
+                if (_player.CurrentPokemon() == null)
                 {
                     _currentGameState = GameState.GameOver;
                 }
                 else
                 {
-                    _battleManager.StartBattle(_player.CurrentPokemon);
+                    _battleManager.StartBattle(_player.CurrentPokemon());
                 }
             }
             _battleManager.BattleOver = false;
@@ -152,17 +193,17 @@ public class Game1 : Game
         if (!wPressed && Keyboard.GetState().IsKeyDown(Keys.D1))
         {
             wPressed = true;
-            _battleManager.PlayerAttack(0, _player.CurrentPokemon);
+            _battleManager.PlayerAttack(0, _player.CurrentPokemon());
         }
         if (Keyboard.GetState().IsKeyUp(Keys.D1))
         {
             wPressed = false;
         }
-        if (!sPressed && Keyboard.GetState().IsKeyDown(Keys.D2) && _player.CurrentPokemon.Abilities.Count > 1)
+        if (!sPressed && Keyboard.GetState().IsKeyDown(Keys.D2) && _player.CurrentPokemon().Abilities.Count > 1)
         {
             sPressed = true;
             Debug.WriteLine("Нажата кнопка 2.");
-            _battleManager.PlayerAttack(1, _player.CurrentPokemon);
+            _battleManager.PlayerAttack(1, _player.CurrentPokemon());
         }
         if (Keyboard.GetState().IsKeyUp(Keys.D2))
         {
@@ -171,7 +212,7 @@ public class Game1 : Game
         if (!aPressed && Keyboard.GetState().IsKeyDown(Keys.D3))
         {
             aPressed = true;
-            _battleManager.EnemyAttack(_player.CurrentPokemon);
+            _battleManager.EnemyAttack(_player.CurrentPokemon());
         }
         if (Keyboard.GetState().IsKeyUp(Keys.D3))
         {
@@ -184,7 +225,7 @@ public class Game1 : Game
         if (!dPressed && Keyboard.GetState().IsKeyDown(Keys.D))
         {
             dPressed = true;
-            _selectedPokemonIndex = (_selectedPokemonIndex + 1) % _availablePokemon.Count;
+            selectedPokemonIndex = (selectedPokemonIndex + 1) % _availablePokemon.Count;
         }
         if (Keyboard.GetState().IsKeyUp(Keys.D))
         {
@@ -193,7 +234,7 @@ public class Game1 : Game
         if (!aPressed && Keyboard.GetState().IsKeyDown(Keys.A))
         {
             aPressed = true;
-            _selectedPokemonIndex = (_selectedPokemonIndex - 1 + _availablePokemon.Count) % _availablePokemon.Count;
+            selectedPokemonIndex = (selectedPokemonIndex - 1 + _availablePokemon.Count) % _availablePokemon.Count;
         }
         if (Keyboard.GetState().IsKeyUp(Keys.A))
         {
@@ -203,11 +244,11 @@ public class Game1 : Game
         if (!EnterPressed && Keyboard.GetState().IsKeyDown(Keys.Enter))
         {
             EnterPressed = true;
-            _player.AddPokemon(_availablePokemon[_selectedPokemonIndex]);
-            _availablePokemon.RemoveAt(_selectedPokemonIndex);
-            _selectedPokemonIndex = 0;
+            _player.AddPokemon(_availablePokemon[selectedPokemonIndex]);
+            _availablePokemon.RemoveAt(selectedPokemonIndex);
+            selectedPokemonIndex = 0;
 
-            if (_player.TeamSize == 3)
+            if (_player.TeamSize() == 3)
             {
                 _currentGameState = GameState.Map;
                 Debug.WriteLine("Команда сформирована!");
@@ -219,9 +260,55 @@ public class Game1 : Game
         }
     }
 
+    private void UpdateMainMenu()
+    {
+        if (!dPressed && Keyboard.GetState().IsKeyDown(Keys.D))
+        {
+            dPressed = true;
+            selectedField = (selectedField + 1) % 3;
+        }
+        if (Keyboard.GetState().IsKeyUp(Keys.D))
+        {
+            dPressed = false;
+        }
+        if (!aPressed && Keyboard.GetState().IsKeyDown(Keys.A))
+        {
+            aPressed = true;
+            selectedField = (selectedField - 1 + _availablePokemon.Count) % 3;
+        }
+        if (Keyboard.GetState().IsKeyUp(Keys.A))
+        {
+            aPressed = false;
+        }
+
+        if (!EnterPressed && Keyboard.GetState().IsKeyDown(Keys.Enter))
+        {
+            EnterPressed = true;
+            switch (selectedField)
+            {
+                case 0:
+                    _currentGameState = GameState.ChoosingPokemon;
+                    break;
+                case 1:
+                    Save(_player, _playMap);
+                    break;
+                case 2:
+                    _player = LoadPlayer();
+                    _playMap = LoadMap();
+                    _currentGameState = GameState.Map;
+                    break;
+            }
+        }
+        if (Keyboard.GetState().IsKeyUp(Keys.Enter))
+        {
+            EnterPressed = false;
+        }
+
+    }
+
     private void HandleInput()
     {
-        Vector2 newPosition = _player.GridPosition;
+        Vector2 newPosition = new Vector2(_player.XGridPosition, _player.YGridPosition);
 
         if (!dPressed && Keyboard.GetState().IsKeyDown(Keys.D))
         {
@@ -265,13 +352,25 @@ public class Game1 : Game
 
         if (_playMap.IsCellWalkable(newPosition))
         {
-            _player.GridPosition = newPosition;
+            _player.XGridPosition = (int)newPosition.X;
+            _player.YGridPosition = (int)newPosition.Y;
+
+        }
+
+        if (!tabPressed && Keyboard.GetState().IsKeyDown(Keys.Tab))
+        {
+            tabPressed = true;
+            _currentGameState = GameState.MainMenu;
+        }
+        if (Keyboard.GetState().IsKeyUp(Keys.Tab))
+        {
+            tabPressed = false;
         }
     }
 
     private void CheckCollisions()
     {
-        Cell currentCell = _playMap.GetCell(_player.GridPosition);
+        Cell currentCell = _playMap.GetCell(new Vector2(_player.XGridPosition, _player.YGridPosition));
 
         if (currentCell is EnemyCell && !currentCell.isDied)
         {
@@ -289,7 +388,7 @@ public class Game1 : Game
     {
         Debug.WriteLine("Начался бой!");
         _currentGameState = GameState.Battle;
-        _battleManager.StartBattle(_player.CurrentPokemon);
+        _battleManager.StartBattle(_player.CurrentPokemon());
     }
 
     protected override void Draw(GameTime gameTime)
@@ -315,6 +414,9 @@ public class Game1 : Game
             case GameState.PlayerWin:
                 DrawPlayerWin();
                 break;
+            case GameState.MainMenu:
+                DrawMainMenu();
+                break;
         }
 
         _spriteBatch.End();
@@ -330,7 +432,7 @@ public class Game1 : Game
 
     private void DrawBattle()
     {
-        _battleManager.Draw(_spriteBatch, _player.CurrentPokemon);
+        _battleManager.Draw(_spriteBatch, _player.CurrentPokemon());
     }
 
     private void DrawChoosingPokemon()
@@ -342,13 +444,13 @@ public class Game1 : Game
         // Отображаем доступных покемонов
         for (int i = 0; i < _availablePokemon.Count; i++)
         {
-            Color color = (i == _selectedPokemonIndex) ? Color.Yellow : Color.White; // Выделяем выбранного
+            Color color = (i == selectedPokemonIndex) ? Color.Yellow : Color.White; // Выделяем выбранного
 
             _spriteBatch.DrawString(_font, _availablePokemon[i].Name, new Vector2(100, 100 + i * 30), color);
         }
 
         _spriteBatch.DrawString(_font, "Use Left/Right to select, Enter to choose", new Vector2(100, 500), Color.Black);
-        _spriteBatch.DrawString(_font, $"Team size: {_player.TeamSize}/3", new Vector2(100, 530), Color.Black);
+        _spriteBatch.DrawString(_font, $"Team size: {_player.TeamSize()}/3", new Vector2(100, 530), Color.Black);
     }
 
     private void DrawGameOver()
@@ -363,5 +465,132 @@ public class Game1 : Game
         GraphicsDevice.Clear(Color.BurlyWood);
         _spriteBatch.DrawString(_font, "You are win! You defided all enemies.", new Vector2(100, 100), Color.Black);
         _spriteBatch.DrawString(_font, "Press Esc to exit.", new Vector2(100, 150), Color.Black);
+    }
+
+    private void DrawMainMenu()
+    {
+        GraphicsDevice.Clear(Color.LightBlue);
+
+        _spriteBatch.DrawString(_font, "Welcime to the Pokemon Game!", new Vector2(100, 50), Color.Black);
+
+        
+        Color color = (0 == selectedField) ? Color.Yellow : Color.White; // Выделяем выбранного
+        _spriteBatch.DrawString(_font, "Start New Game", new Vector2(100, 100 + 0 * 30), color);
+        color = (1 == selectedField) ? Color.Yellow : Color.White;
+        _spriteBatch.DrawString(_font, "Save", new Vector2(100, 100 + 1 * 30), color);
+        color = (2 == selectedField) ? Color.Yellow : Color.White;
+        _spriteBatch.DrawString(_font, "Load", new Vector2(100, 100 + 2 * 30), color);
+
+
+        _spriteBatch.DrawString(_font, "Use Left/Right to select, Enter to choose", new Vector2(100, 500), Color.Black);
+    }
+
+    private void Save(Player player, PlayMap playMap)
+    {
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            IncludeFields = true
+        };
+
+        string serialisedText = JsonSerializer.Serialize<Player>(player, options);
+        Trace.WriteLine(serialisedText);
+        File.WriteAllText(PATHPLAYER, serialisedText);
+
+        options = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            Converters = { new Vector2Converter() } // если у вас есть кастомный конвертер
+        };
+
+        serialisedText = JsonSerializer.Serialize<PlayMap>(playMap, options);
+        Trace.WriteLine(serialisedText);
+        File.WriteAllText(PATHMAP, serialisedText);
+    }
+
+    private Player LoadPlayer()
+    {
+        var deserializedData = File.ReadAllText(PATHPLAYER);
+
+        // Настройки десериализации
+        var options = new JsonSerializerOptions
+        {
+            IncludeFields = true
+        };
+
+        Player newPlayer = JsonSerializer.Deserialize<Player>(deserializedData, options);
+
+        // Восстанавливаем способности через фабричный метод
+        foreach (Pokemon pokemon in newPlayer._team)
+        {
+            // Восстанавливаем текстуры
+            if (pokemon.Name == "Charmander")
+            {
+                pokemon.evolveTexture = TheCharmanderTexture;
+                pokemon.Sprite = new ScaledSprite(CharmanderTexture);
+            }
+            if(pokemon.Name == "THE Charmander")
+            {
+                pokemon.Sprite = new ScaledSprite(TheCharmanderTexture);
+            }
+            if (pokemon.Name == "Squirtle")
+            {
+                pokemon.evolveTexture = TheSquirtleTexture;
+                pokemon.Sprite = new ScaledSprite( SquirtleTexture);
+            }
+            if(pokemon.Name == "THE Squirtle")
+            {
+                pokemon.Sprite = new ScaledSprite(TheSquirtleTexture);
+            }
+            if (pokemon.Name == "Bulbasaur")
+            {
+                pokemon.evolveTexture = TheBulbasaurTexture;
+                pokemon.Sprite = new ScaledSprite(BulbasaurTexture);
+            }
+            if(pokemon.Name == "THE Bulbasaur")
+            {
+                pokemon.Sprite = new ScaledSprite(TheBulbasaurTexture);
+            }
+
+            // Восстанавливаем способности
+            var restoredAbilities = new List<Ability>();
+                if (pokemon.Name == "Charmander" || pokemon.Name == "THE Charmander")
+                {
+                    var newAbility = Ability.Create(nameof(AttakAbility), "Ember", PokemonType.fire, 10);
+                    restoredAbilities.Add(newAbility);
+                    newAbility = Ability.Create(nameof(HealingAbility), "Holy Fire", PokemonType.fire, 10);
+                    restoredAbilities.Add(newAbility);
+
+                }
+                if (pokemon.Name == "Squirtle" || pokemon.Name == "THE Squirtle")
+                {
+                    var newAbility = Ability.Create(nameof(AttakAbility), "Water Gun", PokemonType.water, 15);
+                    restoredAbilities.Add(newAbility);
+                    newAbility = Ability.Create(nameof(AttakAbility), "A lot of water", PokemonType.normal, 80);
+                    restoredAbilities.Add(newAbility);
+                }
+                if (pokemon.Name == "Bulbasaur" || pokemon.Name == "THE Bulbasaur")
+                {
+                    var newAbility = Ability.Create(nameof(AttakAbility), "Vine Whip", PokemonType.normal, 10);
+                    restoredAbilities.Add(newAbility);
+                    newAbility = Ability.Create(nameof(VampAbility), "Vamp Whip", PokemonType.normal, 50);
+                    restoredAbilities.Add(newAbility);
+                }
+            pokemon.Abilities = restoredAbilities;
+        }
+
+        return newPlayer;
+    }
+
+    private PlayMap LoadMap()
+    {
+        var options = new JsonSerializerOptions
+        {
+            Converters = { new Vector2Converter() }
+        };
+        var deserializedData = File.ReadAllText(PATHMAP);
+        PlayMap playMap = JsonSerializer.Deserialize<PlayMap>(deserializedData, options);
+        playMap.UpdateTexture(Maptexture, Maptexture, Maptexture);
+        return playMap;
     }
 }

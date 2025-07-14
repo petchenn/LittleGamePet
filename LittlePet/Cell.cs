@@ -1,14 +1,23 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Text.Json.Serialization;
 
 // Базовый класс для всех ячеек
+[JsonConverter(typeof(CellConverter))]
 public abstract class Cell
 {
-    public bool isDied = true;
-    public bool isUsed = true;
-    public Vector2 Position { get; set; }  // Координаты ячейки на поле
-    public Color Color { get; set; } = Color.White; //  Цвет по умолчанию
-    public Texture2D Texture { get; set; }
+    public bool isDied { get; set; }
+    public bool isUsed { get; set; }
+    [JsonConverter(typeof(Vector2Converter))] public Vector2 Position { get; set; }  // Координаты ячейки на поле
+
+    public Color Color { get; set; } //  Цвет по умолчанию
+    [JsonIgnore] public Texture2D Texture { get; set; }
+
+    [JsonConstructor]
+    public Cell() {
+        isDied = true;
+        isUsed = true;
+    }
 
     public Cell(Vector2 position, Texture2D texture)
     {
@@ -18,15 +27,16 @@ public abstract class Cell
 
     public abstract void Update();
     public abstract void Draw(SpriteBatch spriteBatch);
-
 }
 
+// Остальные классы остаются без изменений
 public class FloorCell : Cell
 {
     public FloorCell(Vector2 position, Texture2D texture) : base(position, texture)
     {
         Color = Color.Gray;
     }
+    public FloorCell() { }
 
     public override void Update()
     {
@@ -36,31 +46,32 @@ public class FloorCell : Cell
     {
         spriteBatch.Draw(Texture, Position, Color);
     }
-
 }
 
-// Класс для стены
 public class WallCell : Cell
 {
+    public WallCell() { }
+
     public WallCell(Vector2 position, Texture2D texture) : base(position, texture)
     {
-        Color = Color.Brown; //  Например, коричневый цвет для стены
+        Color = Color.Brown;
     }
     public override void Update()
     {
-        // Логика обновления для стены (если нужна)
     }
 
     public override void Draw(SpriteBatch spriteBatch)
     {
         spriteBatch.Draw(Texture, Position, Color);
     }
-
 }
 
-// Класс для врага
 public class EnemyCell : Cell
 {
+    public EnemyCell() {
+        isDied = false;
+    }
+
     public EnemyCell(Vector2 position, Texture2D texture) : base(position, texture)
     {
         Color = Color.Red;
@@ -80,6 +91,10 @@ public class EnemyCell : Cell
 
 public class HealCell : Cell
 {
+    public HealCell() {
+        isUsed = false;
+    }
+
     public HealCell(Vector2 position, Texture2D texture) : base(position, texture)
     {
         Color = Color.Green;
