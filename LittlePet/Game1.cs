@@ -32,10 +32,10 @@ public class Game1 : Game
     private Vector2 _playerGridPosition;
 
     private List<Pokemon> _playerTeam = new List<Pokemon>();
-    private int _currentPokemonIndex = 0; // Индекс текущего покемона в команде
-    private Pokemon CurrentPokemon => _playerTeam[_currentPokemonIndex]; //Удобное свойство для доступа к текущему покемону
+    private int _currentPokemonIndex = 0;
+    private Pokemon CurrentPokemon => _playerTeam[_currentPokemonIndex];
 
-    private enum GameState { Map, Battle, ChoosingPokemon, GameOver } // Добавили GameOver
+    private enum GameState { Map, Battle, ChoosingPokemon, GameOver, PlayerWin }
     private GameState _currentGameState = GameState.ChoosingPokemon;
 
     private List<Pokemon> _availablePokemon = new List<Pokemon>();
@@ -43,7 +43,6 @@ public class Game1 : Game
 
     private SpriteFont _font;
 
-    // Добавляем экземпляр класса BattleManager
     private BattleManager _battleManager;
 
     public Game1()
@@ -84,8 +83,7 @@ public class Game1 : Game
         _availablePokemon.Add(new Pokemon("Squirtle", Content.Load<Texture2D>("pok2"), Content.Load<Texture2D>("evpok2"), 5, 55, new List<Ability>() { new Ability("Water Gun", PokemonType.water, 65) }, PokemonType.water, 45, 65));
         _availablePokemon.Add(new Pokemon("Bulbasaur", Content.Load<Texture2D>("pok3"), Content.Load<Texture2D>("evpok3"), 5, 60, new List<Ability>() { new Ability("Vine Whip", PokemonType.normal, 50) }, PokemonType.normal, 50, 50));
 
-        // Инициализация BattleManager
-        _battleManager = new BattleManager(Content, _spriteBatch, _font, PlayerTexture, EnemyTexture); // Передаем необходимые зависимости
+        _battleManager = new BattleManager(Content, _spriteBatch, _font, PlayerTexture, EnemyTexture);
     }
 
     protected override void Update(GameTime gameTime)
@@ -105,7 +103,10 @@ public class Game1 : Game
                 UpdateChoosingPokemon(gameTime);
                 break;
             case GameState.GameOver:
-                // Тут можно добавить логику для Game Over экрана
+                break;
+            case GameState.PlayerWin:
+                break;
+            default:
                 break;
         }
 
@@ -130,7 +131,8 @@ public class Game1 : Game
                 Console.WriteLine($"{_battleManager.EnemyPokemon.Name} побежден!");
                 _battleManager.EnemyPokemon = null;
                 CurrentPokemon.GainExp(10);
-                _currentGameState = GameState.Map;
+                if(_playMap.GetEnemyCount() <= 0) { _currentGameState = GameState.PlayerWin; }
+                else _currentGameState = GameState.Map;
             }
             else
             {
@@ -337,7 +339,10 @@ public class Game1 : Game
                 DrawChoosingPokemon();
                 break;
             case GameState.GameOver:
-                DrawGameOver(); // Рисуем Game Over экран
+                DrawGameOver();
+                break;
+            case GameState.PlayerWin:
+                    DrawPlayerWin();
                 break;
         }
 
@@ -380,5 +385,13 @@ public class Game1 : Game
         GraphicsDevice.Clear(Color.Black);
         _spriteBatch.DrawString(_font, "Game Over! All your Pokemon fainted.", new Vector2(100, 100), Color.White);
         _spriteBatch.DrawString(_font, "Press Esc to exit.", new Vector2(100, 150), Color.White);
+    }
+
+    private void DrawPlayerWin()
+    {
+        GraphicsDevice.Clear(Color.BurlyWood);
+        _spriteBatch.DrawString(_font, "You are win! You defided all enemies.", new Vector2(100, 100), Color.Black);
+        _spriteBatch.DrawString(_font, "Press Esc to exit.", new Vector2(100, 150), Color.Black);
+
     }
 }

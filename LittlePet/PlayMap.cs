@@ -70,7 +70,7 @@ namespace LittlePet
                     count++;
                 }
             }
-            return 0;
+            return count;
         }
 
         public Vector2 GetCellPosition(Vector2 gridPosition)
