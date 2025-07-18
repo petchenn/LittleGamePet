@@ -27,7 +27,7 @@ namespace LittlePet
 
         public Pokemon CurrentPokemon()
         {
-            if (_team.Count > 0) { return _team[currentPokemonIndex]; } else return null;
+            if (_team.Count > 0 && currentPokemonIndex < _team.Count && currentPokemonIndex >=0) { return _team[currentPokemonIndex]; } else return null;
 
         }
 

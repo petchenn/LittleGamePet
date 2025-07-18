@@ -18,37 +18,18 @@ namespace LittlePet
             this.cellSize = cellSize;
         }
 
-        public void GenerateMap(Texture2D Floortexture, Texture2D Walltexture, Texture2D Enemytexture)
+        public void UpdateTexture(Texture2D Floortexture, Texture2D Walltexture, Texture2D HealTexture)
         {
-            cells = new Cell[width][];
-            for (int x = 0; x < width; x++)
+            if (cells != null)
             {
-                cells[x] = new Cell[height];
-                for (int y = 0; y < height; y++)
+                for (int x = 0; x < width; x++)
                 {
-                    cells[x][y] = new FloorCell(new Vector2(x * cellSize, y * cellSize), Floortexture);
+                    for (int y = 0; y < height; y++)
+                    {
+                        cells[x][y].Texture = Floortexture;
+                    }
                 }
             }
-
-            cells[1][1] = new WallCell(new Vector2(1 * cellSize, 1 * cellSize), Walltexture);
-            cells[2][1] = new WallCell(new Vector2(2 * cellSize, 1 * cellSize), Walltexture);
-            cells[3][1] = new WallCell(new Vector2(3 * cellSize, 1 * cellSize), Walltexture);
-
-            cells[1][4] = new EnemyCell(new Vector2(1 * cellSize, 4 * cellSize), Enemytexture);
-            cells[3][4] = new EnemyCell(new Vector2(3 * cellSize, 4 * cellSize), Enemytexture);
-            cells[2][4] = new HealCell(new Vector2(2 * cellSize, 4 * cellSize), Walltexture);
-        }
-
-        public void UpdateTexture(Texture2D Floortexture, Texture2D Walltexture, Texture2D Enemytexture)
-        {
-            for (int x = 0; x < width; x++)
-            {
-                for (int y = 0; y < height; y++)
-                {
-                    cells[x][y].Texture = Floortexture;
-                }
-            }
-
         }
 
         public void Draw(SpriteBatch spriteBatch)

@@ -21,8 +21,10 @@ public class Game1 : Game
 
     private PlayMap _playMap;
 
-    private const int GridWidth = 6;
-    private const int GridHeight = 6;
+    private const int DefaultGridWidth = 6;
+    private const int DefaultGridHeight = 6;
+    private int _gridWidth = DefaultGridWidth;
+    private int _gridHeight = DefaultGridHeight;
     private const int CellSize = 64;
 
     bool dPressed = false;
@@ -34,17 +36,17 @@ public class Game1 : Game
     private Player _player;
     private MovingSprite _EshSprite;
 
-    private enum GameState { Map, Battle, ChoosingPokemon, GameOver, PlayerWin, MainMenu }
+    private enum GameState { Map, Battle, ChoosingPokemon, GameOver, PlayerWin, MainMenu, ChoosingMapSize }
     private GameState _currentGameState = GameState.MainMenu;
 
     public List<Pokemon> _availablePokemon = new List<Pokemon>();
     public int selectedPokemonIndex = 0;
     public int selectedField = 0;
+    public int selectedMapSizeIndex = 0;
 
-    private Texture2D CharmanderTexture, TheCharmanderTexture;
-    private Texture2D SquirtleTexture, TheSquirtleTexture;
-    private Texture2D BulbasaurTexture, TheBulbasaurTexture;
-
+    private Texture2D CharmanderTexture, CharmeleonTexture, CharizardTexture;
+    private Texture2D SquirtleTexture, WartortleTexture, BlastoiseTexture;
+    private Texture2D BulbasaurTexture, IvysaurTexture, VenusaurTexture;
 
     private SpriteFont _font;
 
@@ -67,7 +69,6 @@ public class Game1 : Game
         _graphics.PreferredBackBufferHeight = 650;
         _graphics.ApplyChanges();
 
-        _playMap = new PlayMap(GridWidth, GridHeight, CellSize);
         _player = new Player();
 
         base.Initialize();
@@ -82,42 +83,21 @@ public class Game1 : Game
         _EshSprite = new MovingSprite(PlayerTexture, Vector2.Zero);
 
         Maptexture = Content.Load<Texture2D>("Tile");
-        _playMap.GenerateMap(Maptexture, Maptexture, Maptexture);
-        _player.XGridPosition = 0;
-        _player.YGridPosition = 0;
-        _EshSprite.position = _playMap.GetCellPosition(new Vector2(_player.XGridPosition, _player.YGridPosition));
 
         _font = Content.Load<SpriteFont>("Font");
 
+        //Load Pokemon Textures
         CharmanderTexture = Content.Load<Texture2D>("pok1");
-        TheCharmanderTexture = Content.Load<Texture2D>("evpok1");
+        CharmeleonTexture = Content.Load<Texture2D>("evpok1");
+        CharizardTexture = CharmeleonTexture;
         SquirtleTexture = Content.Load<Texture2D>("pok2");
-        TheSquirtleTexture = Content.Load<Texture2D>("evpok2");
+        WartortleTexture = Content.Load<Texture2D>("evpok2");
+        BlastoiseTexture = WartortleTexture;
         BulbasaurTexture = Content.Load<Texture2D>("pok3");
-        TheBulbasaurTexture = Content.Load<Texture2D>("evpok3");
+        IvysaurTexture = Content.Load<Texture2D>("evpok3");
+        VenusaurTexture = IvysaurTexture;
 
-        // Создаем способности через фабричный метод
-        var charmanderAbilities = new List<Ability>
-        {
-            Ability.Create(nameof(AttakAbility), "Ember", PokemonType.fire, 10),
-            Ability.Create(nameof(HealingAbility), "Holy Fire", PokemonType.fire, 10)
-        };
-
-        var squirtleAbilities = new List<Ability>
-        {
-            Ability.Create(nameof(AttakAbility), "Water Gun", PokemonType.water, 15),
-            Ability.Create(nameof(AttakAbility), "A lot of water", PokemonType.normal, 80)
-        };
-
-        var bulbasaurAbilities = new List<Ability>
-        {
-            Ability.Create(nameof(AttakAbility), "Vine Whip", PokemonType.normal, 10),
-            Ability.Create(nameof(VampAbility), "Vamp Whip", PokemonType.normal, 50)
-        };
-
-        _availablePokemon.Add(new Pokemon("Charmander", CharmanderTexture, TheCharmanderTexture, 5, 50, charmanderAbilities, PokemonType.fire, 60, 40));
-        _availablePokemon.Add(new Pokemon("Squirtle", SquirtleTexture, TheSquirtleTexture, 5, 55, squirtleAbilities, PokemonType.water, 45, 65));
-        _availablePokemon.Add(new Pokemon("Bulbasaur", BulbasaurTexture, TheBulbasaurTexture, 5, 60, bulbasaurAbilities, PokemonType.normal, 50, 50));
+        CreatePlayersPokemons();
 
         _battleManager = new BattleManager(Content, _spriteBatch, _font, PlayerTexture, EnemyTexture);
     }
@@ -144,6 +124,9 @@ public class Game1 : Game
                 break;
             case GameState.MainMenu:
                 UpdateMainMenu();
+                break;
+            case GameState.ChoosingMapSize:
+                UpdateChoosingMapSize();
                 break;
             default:
                 break;
@@ -250,9 +233,146 @@ public class Game1 : Game
 
             if (_player.TeamSize() == 3)
             {
+                _player.XGridPosition = 0;
+                _player.YGridPosition = 0;
+                _EshSprite.position = _playMap.GetCellPosition(new Vector2(_player.XGridPosition, _player.YGridPosition));
                 _currentGameState = GameState.Map;
                 Debug.WriteLine("Команда сформирована!");
             }
+        }
+        if (Keyboard.GetState().IsKeyUp(Keys.Enter))
+        {
+            EnterPressed = false;
+        }
+    }
+
+    private void CreatePlayersPokemons()
+    {
+        // Create abilities
+        var charmanderAbilities = new List<Ability>
+        {
+            Ability.Create(nameof(AttakAbility), "Ember", PokemonType.fire, 10),
+            Ability.Create(nameof(HealingAbility), "Scratch", PokemonType.normal, 5)
+        };
+
+        var charmeleonAbilities = new List<Ability>
+        {
+            Ability.Create(nameof(AttakAbility), "Ember", PokemonType.fire, 20),
+            Ability.Create(nameof(HealingAbility), "Scratch", PokemonType.normal, 10)
+        };
+
+        var charizardAbilities = new List<Ability>
+        {
+            Ability.Create(nameof(AttakAbility), "Flamethrower", PokemonType.fire, 40),
+            Ability.Create(nameof(HealingAbility), "Fly", PokemonType.flying, 20)
+        };
+
+        var squirtleAbilities = new List<Ability>
+        {
+            Ability.Create(nameof(AttakAbility), "Water Gun", PokemonType.water, 15),
+            Ability.Create(nameof(HealingAbility), "Tackle", PokemonType.normal, 5)
+        };
+
+        var wartortleAbilities = new List<Ability>
+        {
+            Ability.Create(nameof(AttakAbility), "Water Gun", PokemonType.water, 25),
+            Ability.Create(nameof(HealingAbility), "Tackle", PokemonType.normal, 10)
+        };
+
+        var blastoiseAbilities = new List<Ability>
+        {
+            Ability.Create(nameof(AttakAbility), "Hydro Pump", PokemonType.water, 50),
+            Ability.Create(nameof(HealingAbility), "Protect", PokemonType.normal, 20)
+        };
+
+        var bulbasaurAbilities = new List<Ability>
+        {
+            Ability.Create(nameof(AttakAbility), "Vine Whip", PokemonType.grass, 10),
+            Ability.Create(nameof(VampAbility), "Leech Seed", PokemonType.grass, 10)
+        };
+
+        var ivysaurAbilities = new List<Ability>
+        {
+            Ability.Create(nameof(AttakAbility), "Razor Leaf", PokemonType.grass, 20),
+            Ability.Create(nameof(VampAbility), "Leech Seed", PokemonType.grass, 20)
+        };
+
+        var venusaurAbilities = new List<Ability>
+        {
+            Ability.Create(nameof(AttakAbility), "Solar Beam", PokemonType.grass, 50),
+            Ability.Create(nameof(VampAbility), "Leech Seed", PokemonType.grass, 30)
+        };
+
+        // Создаем базовую форму покемона
+        Pokemon charmander = new Pokemon("Charmander", CharmanderTexture, 5, 50, charmanderAbilities, PokemonType.fire, 60, 40);
+        Pokemon charmeleon = new Pokemon("Charmeleon", CharmeleonTexture, 16, 80, charmeleonAbilities, PokemonType.fire, 80, 60);
+        Pokemon charizard = new Pokemon("Charizard", CharizardTexture, 36, 120, charizardAbilities, PokemonType.fire, 120, 80);
+        charmander.SetEvolution(charmeleon, 16);
+        charmeleon.SetEvolution(charizard, 36);
+        _availablePokemon.Add(charmander);
+
+
+        Pokemon squirtle = new Pokemon("Squirtle", SquirtleTexture, 5, 50, squirtleAbilities, PokemonType.water, 45, 65);
+        Pokemon wartortle = new Pokemon("Wartortle", WartortleTexture, 16, 80, wartortleAbilities, PokemonType.water, 65, 80);
+        Pokemon blastoise = new Pokemon("Blastoise", BlastoiseTexture, 36, 120, blastoiseAbilities, PokemonType.water, 80, 120);
+        squirtle.SetEvolution(wartortle, 16);
+        wartortle.SetEvolution(blastoise, 36);
+        _availablePokemon.Add(squirtle);
+
+        Pokemon bulbasaur = new Pokemon("Bulbasaur", BulbasaurTexture, 5, 60, bulbasaurAbilities, PokemonType.grass, 50, 50);
+        Pokemon ivysaur = new Pokemon("Ivysaur", IvysaurTexture, 16, 90, ivysaurAbilities, PokemonType.grass, 70, 70);
+        Pokemon venusaur = new Pokemon("Venusaur", VenusaurTexture, 36, 130, venusaurAbilities, PokemonType.grass, 120, 100);
+        bulbasaur.SetEvolution(ivysaur, 16);
+        ivysaur.SetEvolution(venusaur, 36);
+        _availablePokemon.Add(bulbasaur);
+    }
+
+    private void UpdateChoosingMapSize()
+    {
+        if (!dPressed && Keyboard.GetState().IsKeyDown(Keys.D))
+        {
+            dPressed = true;
+            selectedMapSizeIndex = (selectedMapSizeIndex + 1) % 3;
+        }
+        if (Keyboard.GetState().IsKeyUp(Keys.D))
+        {
+            dPressed = false;
+        }
+        if (!aPressed && Keyboard.GetState().IsKeyDown(Keys.A))
+        {
+            aPressed = true;
+            selectedMapSizeIndex = (selectedMapSizeIndex - 1 + 3) % 3;
+        }
+        if (Keyboard.GetState().IsKeyUp(Keys.A))
+        {
+            aPressed = false;
+        }
+
+        if (!EnterPressed && Keyboard.GetState().IsKeyDown(Keys.Enter))
+        {
+            EnterPressed = true;
+
+            switch (selectedMapSizeIndex)
+            {
+                case 0: // Small
+                    _gridWidth = 6;
+                    _gridHeight = 6;
+                    break;
+                case 1: // Medium
+                    _gridWidth = 8;
+                    _gridHeight = 8;
+                    break;
+                case 2: // Large
+                    _gridWidth = 10;
+                    _gridHeight = 10;
+                    break;
+            }
+
+            _playMap = CreateMap(_gridWidth, _gridHeight, selectedMapSizeIndex);
+            _player.XGridPosition = 0;
+            _player.YGridPosition = 0;
+            _EshSprite.position = _playMap.GetCellPosition(new Vector2(_player.XGridPosition, _player.YGridPosition));
+            _currentGameState = GameState.ChoosingPokemon;
         }
         if (Keyboard.GetState().IsKeyUp(Keys.Enter))
         {
@@ -287,7 +407,9 @@ public class Game1 : Game
             switch (selectedField)
             {
                 case 0:
-                    _currentGameState = GameState.ChoosingPokemon;
+                    _player = new Player();
+                    CreatePlayersPokemons();
+                    _currentGameState = GameState.ChoosingMapSize;
                     break;
                 case 1:
                     Save(_player, _playMap);
@@ -295,6 +417,7 @@ public class Game1 : Game
                 case 2:
                     _player = LoadPlayer();
                     _playMap = LoadMap();
+                    _EshSprite.position = _playMap.GetCellPosition(new Vector2(_player.XGridPosition, _player.YGridPosition));
                     _currentGameState = GameState.Map;
                     break;
             }
@@ -417,6 +540,9 @@ public class Game1 : Game
             case GameState.MainMenu:
                 DrawMainMenu();
                 break;
+            case GameState.ChoosingMapSize:
+                DrawChoosingMapSize();
+                break;
         }
 
         _spriteBatch.End();
@@ -441,7 +567,6 @@ public class Game1 : Game
 
         _spriteBatch.DrawString(_font, "Choose your Pokemon (3 total):", new Vector2(100, 50), Color.Black);
 
-        // Отображаем доступных покемонов
         for (int i = 0; i < _availablePokemon.Count; i++)
         {
             Color color = (i == selectedPokemonIndex) ? Color.Yellow : Color.White; // Выделяем выбранного
@@ -473,14 +598,31 @@ public class Game1 : Game
 
         _spriteBatch.DrawString(_font, "Welcime to the Pokemon Game!", new Vector2(100, 50), Color.Black);
 
-        
-        Color color = (0 == selectedField) ? Color.Yellow : Color.White; // Выделяем выбранного
+
+        Color color = (0 == selectedField) ? Color.Yellow : Color.White;
         _spriteBatch.DrawString(_font, "Start New Game", new Vector2(100, 100 + 0 * 30), color);
         color = (1 == selectedField) ? Color.Yellow : Color.White;
         _spriteBatch.DrawString(_font, "Save", new Vector2(100, 100 + 1 * 30), color);
         color = (2 == selectedField) ? Color.Yellow : Color.White;
         _spriteBatch.DrawString(_font, "Load", new Vector2(100, 100 + 2 * 30), color);
 
+
+        _spriteBatch.DrawString(_font, "Use Left/Right to select, Enter to choose", new Vector2(100, 500), Color.Black);
+    }
+
+    private void DrawChoosingMapSize()
+    {
+        GraphicsDevice.Clear(Color.LightGreen);
+
+        _spriteBatch.DrawString(_font, "Choose map size:", new Vector2(100, 50), Color.Black);
+
+        string[] sizes = { "Small", "Medium", "Large" };
+
+        for (int i = 0; i < sizes.Length; i++)
+        {
+            Color color = (i == selectedMapSizeIndex) ? Color.Yellow : Color.White;
+            _spriteBatch.DrawString(_font, sizes[i], new Vector2(100, 100 + i * 30), color);
+        }
 
         _spriteBatch.DrawString(_font, "Use Left/Right to select, Enter to choose", new Vector2(100, 500), Color.Black);
     }
@@ -500,7 +642,7 @@ public class Game1 : Game
         options = new JsonSerializerOptions
         {
             WriteIndented = true,
-            Converters = { new Vector2Converter() } // если у вас есть кастомный конвертер
+            Converters = { new Vector2Converter() }
         };
 
         serialisedText = JsonSerializer.Serialize<PlayMap>(playMap, options);
@@ -512,7 +654,6 @@ public class Game1 : Game
     {
         var deserializedData = File.ReadAllText(PATHPLAYER);
 
-        // Настройки десериализации
         var options = new JsonSerializerOptions
         {
             IncludeFields = true
@@ -520,62 +661,118 @@ public class Game1 : Game
 
         Player newPlayer = JsonSerializer.Deserialize<Player>(deserializedData, options);
 
-        // Восстанавливаем способности через фабричный метод
         foreach (Pokemon pokemon in newPlayer._team)
         {
-            // Восстанавливаем текстуры
             if (pokemon.Name == "Charmander")
             {
-                pokemon.evolveTexture = TheCharmanderTexture;
                 pokemon.Sprite = new ScaledSprite(CharmanderTexture);
             }
-            if(pokemon.Name == "THE Charmander")
+            if (pokemon.Name == "Charmeleon")
             {
-                pokemon.Sprite = new ScaledSprite(TheCharmanderTexture);
+                pokemon.Sprite = new ScaledSprite(CharmeleonTexture);
+            }
+            if (pokemon.Name == "Charizard")
+            {
+                pokemon.Sprite = new ScaledSprite(CharizardTexture);
             }
             if (pokemon.Name == "Squirtle")
             {
-                pokemon.evolveTexture = TheSquirtleTexture;
-                pokemon.Sprite = new ScaledSprite( SquirtleTexture);
+                pokemon.Sprite = new ScaledSprite(SquirtleTexture);
             }
-            if(pokemon.Name == "THE Squirtle")
+            if (pokemon.Name == "Wartortle")
             {
-                pokemon.Sprite = new ScaledSprite(TheSquirtleTexture);
+                pokemon.Sprite = new ScaledSprite(WartortleTexture);
+            }
+            if (pokemon.Name == "Blastoise")
+            {
+                pokemon.Sprite = new ScaledSprite(BlastoiseTexture);
             }
             if (pokemon.Name == "Bulbasaur")
             {
-                pokemon.evolveTexture = TheBulbasaurTexture;
                 pokemon.Sprite = new ScaledSprite(BulbasaurTexture);
             }
-            if(pokemon.Name == "THE Bulbasaur")
+            if (pokemon.Name == "Ivysaur")
             {
-                pokemon.Sprite = new ScaledSprite(TheBulbasaurTexture);
+                pokemon.Sprite = new ScaledSprite(IvysaurTexture);
             }
-
+            if (pokemon.Name == "Venusaur")
+            {
+                pokemon.Sprite = new ScaledSprite(VenusaurTexture);
+            }
             // Восстанавливаем способности
             var restoredAbilities = new List<Ability>();
-                if (pokemon.Name == "Charmander" || pokemon.Name == "THE Charmander")
+            if (pokemon.Name == "Charmander")
+            {
+                restoredAbilities = new List<Ability>
                 {
-                    var newAbility = Ability.Create(nameof(AttakAbility), "Ember", PokemonType.fire, 10);
-                    restoredAbilities.Add(newAbility);
-                    newAbility = Ability.Create(nameof(HealingAbility), "Holy Fire", PokemonType.fire, 10);
-                    restoredAbilities.Add(newAbility);
-
-                }
-                if (pokemon.Name == "Squirtle" || pokemon.Name == "THE Squirtle")
+                    Ability.Create(nameof(AttakAbility), "Ember", PokemonType.fire, 10),
+                    Ability.Create(nameof(HealingAbility), "Scratch", PokemonType.normal, 5)
+                };
+            }
+            if (pokemon.Name == "Charmeleon")
+            {
+                restoredAbilities = new List<Ability>
                 {
-                    var newAbility = Ability.Create(nameof(AttakAbility), "Water Gun", PokemonType.water, 15);
-                    restoredAbilities.Add(newAbility);
-                    newAbility = Ability.Create(nameof(AttakAbility), "A lot of water", PokemonType.normal, 80);
-                    restoredAbilities.Add(newAbility);
-                }
-                if (pokemon.Name == "Bulbasaur" || pokemon.Name == "THE Bulbasaur")
+                    Ability.Create(nameof(AttakAbility), "Ember", PokemonType.fire, 20),
+                    Ability.Create(nameof(HealingAbility), "Scratch", PokemonType.normal, 10)
+                };
+            }
+            if (pokemon.Name == "Charizard")
+            {
+                restoredAbilities = new List<Ability>
                 {
-                    var newAbility = Ability.Create(nameof(AttakAbility), "Vine Whip", PokemonType.normal, 10);
-                    restoredAbilities.Add(newAbility);
-                    newAbility = Ability.Create(nameof(VampAbility), "Vamp Whip", PokemonType.normal, 50);
-                    restoredAbilities.Add(newAbility);
-                }
+                    Ability.Create(nameof(AttakAbility), "Flamethrower", PokemonType.fire, 40),
+                    Ability.Create(nameof(HealingAbility), "Fly", PokemonType.flying, 20)
+                };
+            }
+            if (pokemon.Name == "Squirtle")
+            {
+                restoredAbilities = new List<Ability>
+                {
+                    Ability.Create(nameof(AttakAbility), "Water Gun", PokemonType.water, 15),
+                    Ability.Create(nameof(HealingAbility), "Tackle", PokemonType.normal, 5)
+                };
+            }
+            if (pokemon.Name == "Wartortle")
+            {
+                restoredAbilities = new List<Ability>
+                {
+                    Ability.Create(nameof(AttakAbility), "Water Gun", PokemonType.water, 25),
+                    Ability.Create(nameof(HealingAbility), "Tackle", PokemonType.normal, 10)
+                };
+            }
+            if (pokemon.Name == "Blastoise")
+            {
+                restoredAbilities = new List<Ability>
+                {
+                    Ability.Create(nameof(AttakAbility), "Hydro Pump", PokemonType.water, 50),
+                    Ability.Create(nameof(HealingAbility), "Protect", PokemonType.normal, 20)
+                };
+            }
+            if (pokemon.Name == "Bulbasaur")
+            {
+                restoredAbilities = new List<Ability>
+                {
+                     Ability.Create(nameof(AttakAbility), "Vine Whip", PokemonType.grass, 10),
+                     Ability.Create(nameof(VampAbility), "Leech Seed", PokemonType.grass, 10)
+                };
+            }
+            if (pokemon.Name == "Ivysaur")
+            {
+                restoredAbilities = new List<Ability>
+                {
+                    Ability.Create(nameof(AttakAbility), "Razor Leaf", PokemonType.grass, 20),
+                    Ability.Create(nameof(VampAbility), "Leech Seed", PokemonType.grass, 20)
+                };
+            }
+            if (pokemon.Name == "Venusaur")
+            {
+                restoredAbilities = new List<Ability>
+                {
+                    Ability.Create(nameof(AttakAbility), "Solar Beam", PokemonType.grass, 50),
+                    Ability.Create(nameof(VampAbility), "Leech Seed", PokemonType.grass, 30)
+                };
+            }
             pokemon.Abilities = restoredAbilities;
         }
 
@@ -592,5 +789,28 @@ public class Game1 : Game
         PlayMap playMap = JsonSerializer.Deserialize<PlayMap>(deserializedData, options);
         playMap.UpdateTexture(Maptexture, Maptexture, Maptexture);
         return playMap;
+    }
+
+    private PlayMap CreateMap(int width, int height, int sizeIndex)
+    {
+        IMapGenerator generator;
+
+        switch (sizeIndex)
+        {
+            case 0:
+                generator = new SmallMapGenerator();
+                break;
+            case 1:
+                generator = new MediumMapGenerator();
+                break;
+            case 2:
+                generator = new LargeMapGenerator();
+                break;
+            default:
+                generator = new SmallMapGenerator();
+                break;
+        }
+
+        return generator.GenerateMap(width, height, CellSize, Maptexture, Maptexture, Maptexture, Maptexture);
     }
 }

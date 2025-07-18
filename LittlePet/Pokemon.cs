@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.Json.Serialization;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace LittlePet
 {
@@ -17,12 +16,17 @@ namespace LittlePet
         public PokemonType Type { get; set; }
         public int AttackStat { get; set; }
         public int DefenseStat { get; set; }
-        [JsonIgnore]public ScaledSprite Sprite { get; set; }
-        [JsonIgnore]public Texture2D evolveTexture { get; set; }
+        [JsonIgnore] public ScaledSprite Sprite { get; set; }
 
+        // Ссылка на следующую стадию эволюции.  Если null, то это конечная стадия.
+        [JsonIgnore] public Pokemon NextEvolution { get; set; }
+
+        // Уровень, на котором происходит эволюция. Если 0, то эволюция невозможна.
+        public int EvolutionLevel { get; set; }
 
         public Pokemon() { }
-        public Pokemon(string name, Texture2D textureFirst, Texture2D textureEvolve, int level, int maxHealth, List<Ability> abilities, PokemonType type, int attackStat, int defenseStat)
+
+        public Pokemon(string name, Texture2D texture, int level, int maxHealth, List<Ability> abilities, PokemonType type, int attackStat, int defenseStat)
         {
             Name = name;
             Level = level;
@@ -32,9 +36,17 @@ namespace LittlePet
             Type = type;
             AttackStat = attackStat;
             DefenseStat = defenseStat;
-            Sprite = new ScaledSprite(textureFirst);
-            evolveTexture = textureEvolve;
+            Sprite = new ScaledSprite(texture);
+            NextEvolution = null; // Изначально эволюции нет
+            EvolutionLevel = 0; // Изначально не эволюционирует
         }
+
+        public void SetEvolution(Pokemon nextEvolution, int evolutionLevel)
+        {
+            NextEvolution = nextEvolution;
+            EvolutionLevel = evolutionLevel;
+        }
+
 
         public void Attack(Pokemon target, Ability ability)
         {
@@ -68,7 +80,7 @@ namespace LittlePet
 
         public void Heal(int amount)
         {
-            Debug.WriteLine($"{Name} healing! Health: {Health}"); // Вывод в консоль
+            Debug.WriteLine($"{Name} healing! Health: {Health}");
             Health += amount;
             Health = Math.Min(MaxHealth, Health);
         }
@@ -78,22 +90,35 @@ namespace LittlePet
             Level += amount;
             Debug.WriteLine($"{Name} gained {amount} levels! New level: {Level}");
             // Можно добавить логику для увеличения характеристик
-            if (Level >= 10) Evolve();
+            if (NextEvolution != null && Level >= EvolutionLevel)
+            {
+                Evolve();
+            }
         }
 
         public void Evolve()
         {
-            Debug.WriteLine($"{Name} is trying to evolve!");
-            Sprite.texture = evolveTexture;
-            Name = "THE " + Name;
-            MaxHealth *= 2;
-            Health = MaxHealth;
-            AttackStat *= 2;
-            DefenseStat *= 2;
-            foreach(Ability ability in Abilities)
+            if (NextEvolution == null)
             {
-                ability.Power += 20;
+                Debug.WriteLine($"{Name} cannot evolve any further!");
+                return;
             }
+
+            Debug.WriteLine($"{Name} is evolving!");
+
+            // Копируем характеристики следующей стадии эволюции
+            Name = NextEvolution.Name;
+            Sprite = NextEvolution.Sprite;
+            MaxHealth = NextEvolution.MaxHealth;
+            Health = MaxHealth; // Восстанавливаем здоровье до максимума новой формы
+            AttackStat = NextEvolution.AttackStat;
+            DefenseStat = NextEvolution.DefenseStat;
+            Abilities = NextEvolution.Abilities; // Заменяем способности
+            EvolutionLevel = NextEvolution.EvolutionLevel;
+            NextEvolution = NextEvolution.NextEvolution;
+
+
+            Debug.WriteLine($"{Name} evolved!");
         }
     }
 }

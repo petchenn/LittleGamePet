@@ -33,7 +33,12 @@ public class BattleManager
     {
         if (EnemyPokemon == null)
         {
-            EnemyPokemon = new Pokemon("Wild Pidgey", _enemyTexture, _enemyTexture, 3, 30, new List<Ability>() { new AttakAbility("Tackle", PokemonType.normal, 10) }, PokemonType.normal, 30, 20);
+            // Example Enemy Pokemon creation
+            var pidgeyAbilities = new List<Ability>
+            {
+                Ability.Create(nameof(AttakAbility), "Tackle", PokemonType.normal, 10)
+            };
+            EnemyPokemon = new Pokemon("Wild Pidgey", _enemyTexture, 3, 30, pidgeyAbilities, PokemonType.normal, 30, 20);
             Debug.WriteLine($"Вы напали на {EnemyPokemon.Name}!");
         }
         BattleOver = false;
@@ -42,6 +47,11 @@ public class BattleManager
 
     public void Update(GameTime gameTime, Pokemon playerPokemon)
     {
+        // Check for evolution after gaining exp
+        if (playerPokemon.NextEvolution != null && playerPokemon.Level >= playerPokemon.EvolutionLevel)
+        {
+            playerPokemon.Evolve();
+        }
     }
 
 

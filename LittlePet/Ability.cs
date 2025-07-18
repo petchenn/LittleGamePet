@@ -5,7 +5,7 @@ namespace LittlePet
 {
     public enum PokemonType
     {
-        fire, water, normal
+        fire, water, normal, grass, flying
     }
 
     public abstract class Ability
