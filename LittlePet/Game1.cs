@@ -563,13 +563,13 @@ public class Game1 : Game
 
     private void DrawChoosingPokemon()
     {
-        GraphicsDevice.Clear(Color.LightBlue);
+        GraphicsDevice.Clear(Color.BurlyWood);
 
         _spriteBatch.DrawString(_font, "Choose your Pokemon (3 total):", new Vector2(100, 50), Color.Black);
 
         for (int i = 0; i < _availablePokemon.Count; i++)
         {
-            Color color = (i == selectedPokemonIndex) ? Color.Yellow : Color.White; // Выделяем выбранного
+            Color color = (i == selectedPokemonIndex) ? Color.Red : Color.Black; // Выделяем выбранного
 
             _spriteBatch.DrawString(_font, _availablePokemon[i].Name, new Vector2(100, 100 + i * 30), color);
         }
@@ -594,16 +594,16 @@ public class Game1 : Game
 
     private void DrawMainMenu()
     {
-        GraphicsDevice.Clear(Color.LightBlue);
+        GraphicsDevice.Clear(Color.BurlyWood);
 
         _spriteBatch.DrawString(_font, "Welcime to the Pokemon Game!", new Vector2(100, 50), Color.Black);
 
 
-        Color color = (0 == selectedField) ? Color.Yellow : Color.White;
+        Color color = (0 == selectedField) ? Color.Red : Color.Black;
         _spriteBatch.DrawString(_font, "Start New Game", new Vector2(100, 100 + 0 * 30), color);
-        color = (1 == selectedField) ? Color.Yellow : Color.White;
+        color = (1 == selectedField) ? Color.Red : Color.Black;
         _spriteBatch.DrawString(_font, "Save", new Vector2(100, 100 + 1 * 30), color);
-        color = (2 == selectedField) ? Color.Yellow : Color.White;
+        color = (2 == selectedField) ? Color.Red : Color.Black;
         _spriteBatch.DrawString(_font, "Load", new Vector2(100, 100 + 2 * 30), color);
 
 
@@ -612,7 +612,7 @@ public class Game1 : Game
 
     private void DrawChoosingMapSize()
     {
-        GraphicsDevice.Clear(Color.LightGreen);
+        GraphicsDevice.Clear(Color.BurlyWood);
 
         _spriteBatch.DrawString(_font, "Choose map size:", new Vector2(100, 50), Color.Black);
 
@@ -620,7 +620,7 @@ public class Game1 : Game
 
         for (int i = 0; i < sizes.Length; i++)
         {
-            Color color = (i == selectedMapSizeIndex) ? Color.Yellow : Color.White;
+            Color color = (i == selectedMapSizeIndex) ? Color.Red : Color.Black;
             _spriteBatch.DrawString(_font, sizes[i], new Vector2(100, 100 + i * 30), color);
         }
 

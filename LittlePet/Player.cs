@@ -11,7 +11,6 @@ namespace LittlePet
 {
     public class Player
     {
-        //public Vector2 GridPosition { get; set; }
         public int XGridPosition { get; set; }
         public int YGridPosition { get; set; }
 

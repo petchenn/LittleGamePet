@@ -17,11 +17,7 @@ namespace LittlePet
         public int AttackStat { get; set; }
         public int DefenseStat { get; set; }
         [JsonIgnore] public ScaledSprite Sprite { get; set; }
-
-        // Ссылка на следующую стадию эволюции.  Если null, то это конечная стадия.
         [JsonIgnore] public Pokemon NextEvolution { get; set; }
-
-        // Уровень, на котором происходит эволюция. Если 0, то эволюция невозможна.
         public int EvolutionLevel { get; set; }
 
         public Pokemon() { }
@@ -37,8 +33,8 @@ namespace LittlePet
             AttackStat = attackStat;
             DefenseStat = defenseStat;
             Sprite = new ScaledSprite(texture);
-            NextEvolution = null; // Изначально эволюции нет
-            EvolutionLevel = 0; // Изначально не эволюционирует
+            NextEvolution = null;
+            EvolutionLevel = 0;
         }
 
         public void SetEvolution(Pokemon nextEvolution, int evolutionLevel)
@@ -62,8 +58,6 @@ namespace LittlePet
             int damage = (int)(((2 * Level / 5.0 + 2) * ability.Power * AttackStat / target.DefenseStat / 50 + 2) * typeModifier);
             return Math.Max(1, damage); // Минимум 1 урона
         }
-
-        // Таблица эффективности типов
         private float GetTypeModifier(PokemonType attackType, PokemonType targetType)
         {
             if (attackType == PokemonType.fire && targetType == PokemonType.water) return 0.5f;
@@ -74,8 +68,8 @@ namespace LittlePet
         public void TakeDamage(int damage)
         {
             Health -= damage;
-            Health = Math.Max(0, Health); // Здоровье не может быть меньше 0
-            Debug.WriteLine($"{Name} takes {damage} damage! Health: {Health}"); // Вывод в консоль
+            Health = Math.Max(0, Health); 
+            Debug.WriteLine($"{Name} takes {damage} damage! Health: {Health}");
         }
 
         public void Heal(int amount)
@@ -89,7 +83,6 @@ namespace LittlePet
         {
             Level += amount;
             Debug.WriteLine($"{Name} gained {amount} levels! New level: {Level}");
-            // Можно добавить логику для увеличения характеристик
             if (NextEvolution != null && Level >= EvolutionLevel)
             {
                 Evolve();
@@ -106,14 +99,13 @@ namespace LittlePet
 
             Debug.WriteLine($"{Name} is evolving!");
 
-            // Копируем характеристики следующей стадии эволюции
             Name = NextEvolution.Name;
             Sprite = NextEvolution.Sprite;
             MaxHealth = NextEvolution.MaxHealth;
-            Health = MaxHealth; // Восстанавливаем здоровье до максимума новой формы
+            Health = MaxHealth; 
             AttackStat = NextEvolution.AttackStat;
             DefenseStat = NextEvolution.DefenseStat;
-            Abilities = NextEvolution.Abilities; // Заменяем способности
+            Abilities = NextEvolution.Abilities;
             EvolutionLevel = NextEvolution.EvolutionLevel;
             NextEvolution = NextEvolution.NextEvolution;
 
